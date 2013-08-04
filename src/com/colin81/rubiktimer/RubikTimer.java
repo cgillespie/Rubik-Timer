@@ -8,7 +8,10 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
@@ -41,6 +44,9 @@ import com.colin81.rubiktimer.dialogs.NewPuzzleInfo;
 
 public class RubikTimer extends JPanel implements ActionListener {
 
+	private static Logger LOGGER = Logger
+			.getLogger(DBConnector.class.getName());
+
 	private static final String home = System.getProperty("user.home");
 	private static final String delim = System.getProperty("file.separator");
 
@@ -55,6 +61,9 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private List<Puzzle> puzzles;
 	private List<Profile> profiles;
 	private List<Solve> solves;
+
+	/** Maps menu items for creating a new Profile to its associated Puzzle */
+	private Map<JMenuItem, Puzzle> newProfileMenuMap;
 
 	private final String dataDir;
 	private static final String newProfileCommand = "NEW_PROFILE";
@@ -92,9 +101,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(final ActionEvent e) {
 		if (e.getActionCommand().equals(newProfileCommand)) {
-			// TODO: use e.getSource().
-			// TODO: extend JMenuItem to find which puzzle to default to.
-			addProfile(null);
+			addProfile(newProfileMenuMap.get(e.getSource()));
 		} else if (e.getSource() == mntmAbout) {
 			final AboutDialog ad = new AboutDialog(aboutInfo);
 			ad.setVisible(true);
@@ -105,19 +112,20 @@ public class RubikTimer extends JPanel implements ActionListener {
 	}
 
 	private void addProfile(final Puzzle target) {
+		LOGGER.info("Creating new Profile for Puzzle: " + target.getName());
 		// TODO Auto-generated method stub
 
 	}
 
 	private void addPuzzle() {
-		System.out.println("someone requested a new puzzle");
+		LOGGER.info("someone requested a new puzzle");
 		final NewPuzzleInfo npi = new NewPuzzleInfo();
 		@SuppressWarnings("unused")
 		final NewPuzzleDialog npd = new NewPuzzleDialog(dataDir + "scramblers",
 				npi);
 
 		if (npi.isConfirmed()) {
-			System.out.println(npi.toString());
+			LOGGER.info(npi.toString());
 			final Puzzle p = new Puzzle(npi.getName());
 			p.setScrambler(npi.getScramblerPath());
 			p.setImage(npi.getImagePath());
@@ -138,8 +146,11 @@ public class RubikTimer extends JPanel implements ActionListener {
 		mnPuzzle.add(new JSeparator());
 		mnPuzzle.add(mntmNewPuzzle);
 		puzzles = db.getPuzzles();
+		newProfileMenuMap = new HashMap<JMenuItem, Puzzle>(puzzles.size());
+
 		for (int i = 0; i < puzzles.size(); i++) {
-			final JMenu menu = new JMenu(puzzles.get(i).getName());
+			final Puzzle p = puzzles.get(i);
+			final JMenu menu = new JMenu(p.getName());
 			mnPuzzle.add(menu, i);
 
 			menu.add(new JSeparator());
@@ -147,15 +158,19 @@ public class RubikTimer extends JPanel implements ActionListener {
 			final JMenuItem mntmNewProfile = new JMenuItem("New...");
 			mntmNewProfile.setIcon(new ImageIcon(RubikTimer.class
 					.getResource("/images/new_con.gif")));
+			mntmNewProfile.setActionCommand(newProfileCommand);
 			mntmNewProfile.addActionListener(this);
 			menu.add(mntmNewProfile);
+
+			newProfileMenuMap.put(mntmNewProfile, p);
 		}
+
 		try {
 			profiles = db.getProfiles();
 			for (int i = 0; i < profiles.size(); i++) {
 				final Profile p = profiles.get(i);
 				final JMenuItem item = new JMenuItem(p.getName());
-				item.setActionCommand(newProfileCommand);
+
 				item.addActionListener(this);
 				final JMenu menu = (JMenu) mnPuzzle.getComponent(p.getPuzzle()
 						.getId());

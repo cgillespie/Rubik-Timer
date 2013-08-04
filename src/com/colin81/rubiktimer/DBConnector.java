@@ -22,7 +22,7 @@ public class DBConnector {
 	private static Logger LOGGER = Logger
 			.getLogger(DBConnector.class.getName());
 
-	/* The id field for SQLite tables is stored in the hidden field `ROWID` */
+	/* The id field for SQLite tables is stored in the hidden field ROWID */
 
 	private static final String PUZZLE_TABLE = "Puzzle";
 	private static final String PUZZLE_NAME = "Name";
@@ -60,6 +60,13 @@ public class DBConnector {
 		printAll();
 	}
 
+	/**
+	 * Adds a Profile to the database.
+	 * 
+	 * @param profile
+	 * @return int - Returns the RowID of the added Profile
+	 * @throws SQLException
+	 */
 	public int addProfile(final Profile profile) throws SQLException {
 		/* check that profile is unique */
 		for (final Profile p : getProfiles()) {
@@ -81,9 +88,10 @@ public class DBConnector {
 	}
 
 	/**
+	 * Adds a Puzzle to the database.
 	 * 
 	 * @param puzzle
-	 * @return int - id of the new or existing equivalent puzzle.
+	 * @return int - Returns the RowID of the added Puzzle.
 	 * @throws SQLException
 	 */
 	public int addPuzzle(final Puzzle puzzle) throws SQLException {
@@ -109,6 +117,13 @@ public class DBConnector {
 
 	}
 
+	/**
+	 * Adds a Solve to the database.
+	 * 
+	 * @param solve
+	 * @return int - Returns the RowID of the added Solve.
+	 * @throws SQLException
+	 */
 	public int addSolve(final Solve solve) throws SQLException {
 		// TODO: check for uniqueness of solve???
 		// could be intensive - better handled by app?
@@ -143,7 +158,7 @@ public class DBConnector {
 	 * Returns the id for the newest row in a table.
 	 * 
 	 * @param table
-	 * @return rowid or 0 if no rows exist.
+	 * @return int - RowID or 0 if no rows exist.
 	 * @throws SQLException
 	 */
 	private int getLastInsertId(final String table) throws SQLException {
@@ -153,6 +168,14 @@ public class DBConnector {
 		return rs.getInt(1);
 	}
 
+	/**
+	 * Returns the Profile at the given RowID or null if it doesn't exist.
+	 * 
+	 * @param id
+	 *            The RowID of the database to get the Profile
+	 * @return The Profile at the specified RowID
+	 * @throws SQLException
+	 */
 	public Profile getProfile(final int id) throws SQLException {
 		final String qry = String.format(
 				"SELECT ROWID, * FROM %s WHERE ROWID=%d", PROFILE_TABLE, id);
@@ -173,9 +196,11 @@ public class DBConnector {
 	}
 
 	/**
+	 * Retrieves all the profiles in order of their RowID.
 	 * 
-	 * @return All the profiles or null if none exist.
+	 * @return All the profiles or an empty List if none exist.
 	 * @throws SQLException
+	 * @see Profile
 	 */
 	public List<Profile> getProfiles() throws SQLException {
 		final String qry = String.format("SELECT * FROM %s", PROFILE_TABLE);
@@ -191,10 +216,17 @@ public class DBConnector {
 			profiles.add(p);
 		}
 
-		/* Return null if the list is empty */
-		return profiles.size() > 0 ? profiles : null;
+		return profiles;
 	}
 
+	/**
+	 * Returns the Puzzle at the given RowID or null if it doesn't exist.
+	 * 
+	 * @param id
+	 * @return
+	 * @throws SQLException
+	 * @see Puzzle
+	 */
 	public Puzzle getPuzzle(final int id) throws SQLException {
 		final String qry = String.format(
 				"SELECT ROWID, * FROM %s WHERE ROWID=%d", PUZZLE_TABLE, id);
@@ -216,10 +248,11 @@ public class DBConnector {
 	}
 
 	/**
-	 * Retrieves all the puzzles in order of there id.
+	 * Retrieves all the puzzles in order of their RowID.
 	 * 
-	 * @return All the puzzles or null if none exist.
+	 * @return List<Puzzle> - All the puzzles or an empty List if none exist.
 	 * @throws SQLException
+	 * @see Puzzle
 	 */
 	public List<Puzzle> getPuzzles() throws SQLException {
 		final String qry = String.format("SELECT ROWID, * FROM %s",
@@ -235,10 +268,16 @@ public class DBConnector {
 			puzzles.add(p);
 		}
 
-		/* Return null if the list is empty */
-		return puzzles.size() > 0 ? puzzles : null;
+		return puzzles;
 	}
 
+	/**
+	 * Retrieves all the solves in order of their RowID.
+	 * 
+	 * @return List<Solve> - All the solves or an empty List if none exist.
+	 * @throws SQLException
+	 * @see Solve
+	 */
 	public List<Solve> getSolves() throws SQLException {
 		final String qry = String.format("SELECT * FROM %s", SOLVE_TABLE);
 		return getSolvesFromQuery(qry);
@@ -265,8 +304,7 @@ public class DBConnector {
 			solves.add(s);
 		}
 
-		/* Return null if the list is empty */
-		return solves.size() > 0 ? solves : null;
+		return solves;
 	}
 
 	/**

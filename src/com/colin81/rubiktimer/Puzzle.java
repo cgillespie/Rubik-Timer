@@ -7,31 +7,17 @@ public class Puzzle {
 	private String scrambler;
 	private String image;
 
+	public Puzzle() {
+
+	}
+
 	public Puzzle(final int id) {
 		this.id = id;
-	}
-
-	public Puzzle(final int id, final String name) {
-		this.id = id;
-		this.name = name;
-	}
-
-	public Puzzle(final int id, final String name, final String scrambler) {
-		this.id = id;
-		this.name = name;
-		this.scrambler = scrambler;
 	}
 
 	public Puzzle(final String name) {
 		this.name = name;
 	}
-
-	public Puzzle(final String name, final String scrambler) {
-		this.name = name;
-		this.scrambler = scrambler;
-	}
-
-	/* Getters and Setters */
 
 	@Override
 	public boolean equals(final Object obj) {
