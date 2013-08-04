@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -17,9 +18,16 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import net.miginfocom.swing.MigLayout;
 
+import com.colin81.rubiktimer.DBConnector;
+import com.colin81.rubiktimer.Puzzle;
+
 public class NewPuzzleDialog extends JDialog implements ActionListener {
 
+	private static Logger LOGGER = Logger
+			.getLogger(DBConnector.class.getName());
+
 	private static final long serialVersionUID = 5219411011556348152L;
+
 	private final JButton btnChooseScrambler;
 	private final JButton btnChooseImage;
 	private final JTextField textField;
@@ -27,18 +35,21 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 	private final JButton btnCancel;
 	private final JLabel lblScramblePath;
 	private final JLabel lblImagePath;
+	private JFileChooser chooser;
 
 	private final String dir;
-	private final NewPuzzleInfo npi;
+	private String scramblerLoc;
+	private String imageLoc;
+	private Puzzle puzzle = null;
+	private boolean confirmed;
 
-	public NewPuzzleDialog(final String dir, final NewPuzzleInfo npi) {
+	public NewPuzzleDialog(final String dir) {
 		setMinimumSize(new Dimension(300, 150));
 		this.setModal(true);
 		setLocationRelativeTo(null);
 		// setResizable(false);
 		// setSize(320, 140);
 
-		this.npi = npi;
 		this.dir = dir;
 		setTitle("Add New Puzzle");
 		getContentPane().setLayout(new BorderLayout(0, 0));
@@ -99,20 +110,25 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 		if (e.getSource() == btnCancel) {
 			setVisible(false);
 			dispose();
+
 		} else if (e.getSource() == btnOk) {
 			if (!textField.getText().equals("")) {
-				npi.setName(textField.getText());
-				npi.setConfirmed(true);
+				puzzle = new Puzzle(textField.getText());
+				puzzle.setScrambler(scramblerLoc);
+				puzzle.setImage(imageLoc);
+
+				confirmed = true;
 				setVisible(false);
 				dispose();
+
 			} else {
 				textField.requestFocus();
 				textField.setText("Please enter a name");
 				textField.selectAll();
 			}
 		} else if (e.getSource() == btnChooseScrambler) {
-			System.out.println(dir);
-			final JFileChooser chooser = new JFileChooser(dir);
+			LOGGER.info(dir);
+			chooser = new JFileChooser(dir);
 
 			final FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"Java Class Files", "class");
@@ -121,21 +137,28 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 			final int returnVal = chooser.showOpenDialog(this);
 
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				npi.setScramblerPath(chooser.getSelectedFile()
-						.getAbsolutePath());
+				scramblerLoc = chooser.getSelectedFile().getAbsolutePath();
 				lblScramblePath.setText(chooser.getSelectedFile().getName());
 			}
 
 		} else if (e.getSource() == btnChooseImage) {
-			final JFileChooser chooser = new JFileChooser();
+			chooser = new JFileChooser();
 			final FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"JPG Images", "jpg");
 			chooser.setFileFilter(filter);
 			final int returnVal = chooser.showOpenDialog(this);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				npi.setImagePath(chooser.getSelectedFile().getAbsolutePath());
+				imageLoc = chooser.getSelectedFile().getAbsolutePath();
 				lblImagePath.setText(chooser.getSelectedFile().getName());
 			}
 		}
+	}
+
+	public Puzzle getNewPuzzle() {
+		return puzzle;
+	}
+
+	public boolean isConfirmed() {
+		return confirmed;
 	}
 }

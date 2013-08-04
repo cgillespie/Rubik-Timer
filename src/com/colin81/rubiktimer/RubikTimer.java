@@ -34,7 +34,6 @@ import net.miginfocom.swing.MigLayout;
 import com.colin81.rubiktimer.dialogs.AboutDialog;
 import com.colin81.rubiktimer.dialogs.AboutInfo;
 import com.colin81.rubiktimer.dialogs.NewPuzzleDialog;
-import com.colin81.rubiktimer.dialogs.NewPuzzleInfo;
 
 /**
  * @version 0.0.0
@@ -119,17 +118,11 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	private void addPuzzle() {
 		LOGGER.info("someone requested a new puzzle");
-		final NewPuzzleInfo npi = new NewPuzzleInfo();
-		@SuppressWarnings("unused")
-		final NewPuzzleDialog npd = new NewPuzzleDialog(dataDir + "scramblers",
-				npi);
 
-		if (npi.isConfirmed()) {
-			LOGGER.info(npi.toString());
-			final Puzzle p = new Puzzle(npi.getName());
-			p.setScrambler(npi.getScramblerPath());
-			p.setImage(npi.getImagePath());
-
+		final NewPuzzleDialog npd = new NewPuzzleDialog(dataDir + "scramblers");
+		if (npd.isConfirmed()) {
+			final Puzzle p = npd.getNewPuzzle();
+			LOGGER.info(p.toString());
 			try {
 				db.addPuzzle(p);
 				buildPuzzleMenu();
