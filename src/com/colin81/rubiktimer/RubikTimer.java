@@ -33,6 +33,7 @@ import net.miginfocom.swing.MigLayout;
 
 import com.colin81.rubiktimer.dialogs.AboutDialog;
 import com.colin81.rubiktimer.dialogs.AboutInfo;
+import com.colin81.rubiktimer.dialogs.NewProfileDialog;
 import com.colin81.rubiktimer.dialogs.NewPuzzleDialog;
 
 /**
@@ -112,7 +113,8 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	private void addProfile(final Puzzle target) {
 		LOGGER.info("Creating new Profile for Puzzle: " + target.getName());
-		// TODO Auto-generated method stub
+		NewProfileDialog npd = new NewProfileDialog(puzzles);
+		npd.setVisible(true);
 
 	}
 
