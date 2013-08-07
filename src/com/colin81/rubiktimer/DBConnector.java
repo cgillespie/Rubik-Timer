@@ -22,7 +22,7 @@ public class DBConnector {
 	private static Logger LOGGER = Logger
 			.getLogger(DBConnector.class.getName());
 
-	/* The id field for SQLite tables is stored in the hidden field ROWID */
+	/* The id field for SQLite tables is stored in the hidden field rowid */
 
 	private static final String PUZZLE_TABLE = "Puzzle";
 	private static final String PUZZLE_NAME = "Name";
@@ -52,47 +52,38 @@ public class DBConnector {
 		Class.forName("org.sqlite.JDBC");
 
 		connection = DriverManager.getConnection("jdbc:sqlite:"
-				+ database.getName());
+				+ database.getAbsolutePath());
 		statement = connection.createStatement();
 
 		initDB();
 		// TODO: remove after debugging
-		printAll();
+		// printAll();
 	}
 
 	/**
-	 * Adds a Profile to the database.
 	 * 
 	 * @param profile
-	 * @return int - Returns the RowID of the added Profile
+	 * @return
 	 * @throws SQLException
 	 */
 	public int addProfile(final Profile profile) throws SQLException {
-		/* check that profile is unique */
-		for (final Profile p : getProfiles()) {
-			if (p.equals(profile)) {
-				LOGGER.info("Profile already exists!");
-				return p.getId();
-			}
-		}
-
 		final String qry = String.format(
-				"INSERT INTO %s (%s, %s, %s) VALUES ('%d', '%s', '%s')",
+				"INSERT INTO %s (%s, %s, %s) VALUES (%s, '%s', '%s')",
 				PROFILE_TABLE, PROFILE_PUZZLE, PROFILE_NAME, PROFILE_DESC,
 				profile.getPuzzle().getId(), profile.getName(),
 				profile.getDescription());
 
 		statement.executeUpdate(qry);
-		return getLastInsertId(PUZZLE_TABLE);
-
+		return getLastInsertId(PROFILE_TABLE);
 	}
 
 	/**
 	 * Adds a Puzzle to the database.
 	 * 
 	 * @param puzzle
-	 * @return int - Returns the RowID of the added Puzzle.
+	 * @return int - Returns the rowid of the added Puzzle.
 	 * @throws SQLException
+	 * @see Puzzle
 	 */
 	public int addPuzzle(final Puzzle puzzle) throws SQLException {
 		/* check that puzzle is unique */
@@ -121,8 +112,9 @@ public class DBConnector {
 	 * Adds a Solve to the database.
 	 * 
 	 * @param solve
-	 * @return int - Returns the RowID of the added Solve.
+	 * @return The rowid of the added Solve.
 	 * @throws SQLException
+	 * @see Solve
 	 */
 	public int addSolve(final Solve solve) throws SQLException {
 		// TODO: check for uniqueness of solve???
@@ -155,10 +147,10 @@ public class DBConnector {
 	}
 
 	/**
-	 * Returns the id for the newest row in a table.
+	 * Returns the rowid for the newest row in a table.
 	 * 
 	 * @param table
-	 * @return int - RowID or 0 if no rows exist.
+	 * @return rowid or 0 if no rows exist.
 	 * @throws SQLException
 	 */
 	private int getLastInsertId(final String table) throws SQLException {
@@ -169,50 +161,51 @@ public class DBConnector {
 	}
 
 	/**
-	 * Returns the Profile at the given RowID or null if it doesn't exist.
 	 * 
 	 * @param id
-	 *            The RowID of the database to get the Profile
-	 * @return The Profile at the specified RowID
+	 * @return
 	 * @throws SQLException
 	 */
 	public Profile getProfile(final int id) throws SQLException {
 		final String qry = String.format(
-				"SELECT ROWID, * FROM %s WHERE ROWID=%d", PROFILE_TABLE, id);
+				"SELECT rowid, * FROM %s WHERE rowid=%d", PROFILE_TABLE, id);
 
 		final ResultSet rs = statement.executeQuery(qry);
-		final int rowid = rs.getInt("ROWID");
+		final int rowid = rs.getInt("rowid");
 		if (rowid > 0) {
 			final Profile p = new Profile(rowid);
 			p.setName(rs.getString(PROFILE_NAME));
-			p.setDescription(rs.getString(PROFILE_DESC));
 			p.setPuzzle(getPuzzle(rs.getInt(PROFILE_PUZZLE)));
+			p.setDescription(rs.getString(PROFILE_DESC));
+
+			// TODO remove
+			System.out.println(p);
 
 			return p;
 		}
 
-		LOGGER.severe("Profile doesn't exist!");
+		LOGGER.severe("Profile [" + id + "] doesn't exist!");
 		return null;
 	}
 
 	/**
-	 * Retrieves all the profiles in order of their RowID.
 	 * 
-	 * @return All the profiles or an empty List if none exist.
+	 * @return
 	 * @throws SQLException
 	 * @see Profile
 	 */
 	public List<Profile> getProfiles() throws SQLException {
-		final String qry = String.format("SELECT * FROM %s", PROFILE_TABLE);
+		final String qry = String.format("SELECT rowid, * FROM %s",
+				PROFILE_TABLE);
 
 		final ResultSet rs = statement.executeQuery(qry);
 		final List<Profile> profiles = new ArrayList<Profile>();
 
 		while (rs.next()) {
-			final Profile p = new Profile(rs.getRow());
-			p.setName(rs.getString(PROFILE_NAME));
-			p.setDescription(PROFILE_DESC);
+			final Profile p = new Profile(rs.getInt("rowid"));
 			p.setPuzzle(getPuzzle(rs.getInt(PROFILE_PUZZLE)));
+			p.setName(rs.getString(PROFILE_NAME));
+			p.setDescription(rs.getString(PROFILE_DESC));
 			profiles.add(p);
 		}
 
@@ -220,25 +213,28 @@ public class DBConnector {
 	}
 
 	/**
-	 * Returns the Puzzle at the given RowID or null if it doesn't exist.
+	 * Returns the Puzzle at the given rowid or null if it doesn't exist.
 	 * 
 	 * @param id
-	 * @return
+	 * @return The puzzle at the specified rowid.
 	 * @throws SQLException
 	 * @see Puzzle
 	 */
 	public Puzzle getPuzzle(final int id) throws SQLException {
 		final String qry = String.format(
-				"SELECT ROWID, * FROM %s WHERE ROWID=%d", PUZZLE_TABLE, id);
+				"SELECT rowid, * FROM %s WHERE rowid=%d", PUZZLE_TABLE, id);
 		LOGGER.info(qry);
 
 		final ResultSet rs = statement.executeQuery(qry);
-		final int rowid = rs.getInt("ROWID");
+		final int rowid = rs.getInt("rowid");
 		if (rowid > 0) {
 			final Puzzle p = new Puzzle(rowid);
 			p.setName(rs.getString(PUZZLE_NAME));
 			p.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
 			p.setImage(rs.getString(PUZZLE_IMAGE));
+
+			// TODO remove
+			System.out.println(p);
 
 			return p;
 		}
@@ -248,33 +244,38 @@ public class DBConnector {
 	}
 
 	/**
-	 * Retrieves all the puzzles in order of their RowID.
+	 * Retrieves all the puzzles in order of their rowid.
 	 * 
-	 * @return List<Puzzle> - All the puzzles or an empty List if none exist.
+	 * @return All the puzzles or an empty List if none exist.
 	 * @throws SQLException
 	 * @see Puzzle
 	 */
 	public List<Puzzle> getPuzzles() throws SQLException {
-		final String qry = String.format("SELECT ROWID, * FROM %s",
+		final String qry = String.format("SELECT rowid, * FROM %s",
 				PUZZLE_TABLE);
 
 		final ResultSet rs = statement.executeQuery(qry);
 		final List<Puzzle> puzzles = new ArrayList<Puzzle>();
 
 		while (rs.next()) {
-			final Puzzle p = new Puzzle(rs.getInt("ROWID"));
+			final Puzzle p = new Puzzle(rs.getInt("rowid"));
 			p.setName(rs.getString(PUZZLE_NAME));
 			p.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
 			puzzles.add(p);
+		}
+
+		// TODO: remove print
+		for (final Puzzle p : puzzles) {
+			System.out.println(p.toString());
 		}
 
 		return puzzles;
 	}
 
 	/**
-	 * Retrieves all the solves in order of their RowID.
+	 * Retrieves all the solves in order of their rowid.
 	 * 
-	 * @return List<Solve> - All the solves or an empty List if none exist.
+	 * @return All the solves or an empty List if none exist.
 	 * @throws SQLException
 	 * @see Solve
 	 */
@@ -296,7 +297,7 @@ public class DBConnector {
 		final List<Solve> solves = new ArrayList<Solve>();
 
 		while (rs.next()) {
-			final Solve s = new Solve(rs.getInt("ROWID"));
+			final Solve s = new Solve(rs.getInt("rowid"));
 			s.setScramble(rs.getString(SOLVE_SCRAMBLE));
 			s.setSolveTime(rs.getInt(SOLVE_TIME));
 			s.setDateTime(rs.getInt(SOLVE_DATETIME));
@@ -315,19 +316,20 @@ public class DBConnector {
 	private void initDB() throws SQLException {
 		LOGGER.info("init database");
 		final String createPuzzle = String.format(
-				"CREATE TABLE IF NOT EXISTS %s " + "(%s	TEXT	NOT NULL,"
-						+ " %s	TEXT," + " %s	TEXT);", PUZZLE_TABLE,
-				PUZZLE_NAME, PUZZLE_SCRAMBLE, PUZZLE_IMAGE);
+				"CREATE TABLE IF NOT EXISTS %s (%s TEXT NOT NULL,"
+						+ " %s TEXT, %s TEXT);", PUZZLE_TABLE, PUZZLE_NAME,
+				PUZZLE_SCRAMBLE, PUZZLE_IMAGE);
 		statement.executeUpdate(createPuzzle);
 
-		final String createProfile = String.format(
-				"CREATE TABLE IF NOT EXISTS %s " + "(%s	INTEGER	NOT NULL,"
-						+ " %s	TEXT	NOT NULL," + " %s	TEXT);", PROFILE_TABLE,
-				PROFILE_PUZZLE, PROFILE_NAME, PROFILE_DESC);
+		final String createProfile = String
+				.format("CREATE TABLE IF NOT EXISTS %s "
+						+ "(%s INTEGER NOT NULL, %s TEXT NOT NULL, %s TEXT NULLABLE);",
+						PROFILE_TABLE, PROFILE_PUZZLE, PROFILE_NAME,
+						PROFILE_DESC);
 		statement.executeUpdate(createProfile);
 
 		final String createSolve = String.format(
-				"CREATE TABLE IF NOT EXISTS %s " + "(%s	INTEGER	NOT NULL,"
+				"CREATE TABLE IF NOT EXISTS %s (%s	INTEGER	NOT NULL,"
 						+ "%s	TEXT," + "%s	INTEGER	NOT NULL,"
 						+ "%s	INTEGER NOT NULL);", SOLVE_TABLE, SOLVE_PROFILE,
 				SOLVE_SCRAMBLE, SOLVE_TIME, SOLVE_DATETIME);

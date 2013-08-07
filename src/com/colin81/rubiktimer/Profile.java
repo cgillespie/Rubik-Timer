@@ -7,25 +7,13 @@ public class Profile {
 	private String name;
 	private String description;
 
+	public Profile() {
+
+	}
+
 	public Profile(final int id) {
-
+		this.id = id;
 	}
-
-	public Profile(final int id, final Puzzle puzzle, final String name,
-			final String description) {
-		this.puzzle = puzzle;
-		this.name = name;
-		this.description = description;
-	}
-
-	public Profile(final Puzzle puzzle, final String name,
-			final String description) {
-		this.puzzle = puzzle;
-		this.name = name;
-		this.description = description;
-	}
-
-	/* Getters and Setters */
 
 	@Override
 	public boolean equals(final Object obj) {

@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -65,13 +66,11 @@ public class RubikTimer extends JPanel implements ActionListener {
 	/** Maps menu items for creating a new Profile to its associated Puzzle */
 	private Map<JMenuItem, Puzzle> newProfileMenuMap;
 
-	private final String dataDir;
+	private File dataDir;
 	private static final String newProfileCommand = "NEW_PROFILE";
-
 	private DBConnector db;
-	private AboutInfo aboutInfo;
 
-	/* Gui components */
+	private AboutInfo aboutInfo;
 	private JMenu mnPuzzle;
 	private JMenuItem mntmNewPuzzle;
 	private JMenuItem mntmAbout;
@@ -80,19 +79,24 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private JProgressBar progressBar;
 
 	public RubikTimer() {
-		// dataDir = "J:\\Development\\workspace\\rubik-timer\\";//home + delim
-		// + "rubiktimer" + delim;
-		dataDir = "/run/media/colin/VERBATIM HD/Development/workspace/rubik-timer/";
 		// TODO: show a loading screen here
 		try {
 			buildUI();
+			dataDir = new File(home + delim + ".rubiktimer" + delim);
+			dataDir.createNewFile();
 			db = new DBConnector(new File(dataDir + "default.db"));
 			initPane();
 		} catch (final SQLException e) {
+			LOGGER.severe(e.getLocalizedMessage());
 			// TODO: prompt to create a new db?
 			e.printStackTrace();
 		} catch (final ClassNotFoundException e) {
+			LOGGER.severe(e.getLocalizedMessage());
 			// TODO: show error message on the loading screen
+			e.printStackTrace();
+		} catch (final IOException e) {
+			LOGGER.severe(e.getLocalizedMessage());
+			// TODO show error message on the loading screen
 			e.printStackTrace();
 		}
 
@@ -113,8 +117,20 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	private void addProfile(final Puzzle target) {
 		LOGGER.info("Creating new Profile for Puzzle: " + target.getName());
-		NewProfileDialog npd = new NewProfileDialog(puzzles);
-		npd.setVisible(true);
+		final NewProfileDialog npd = new NewProfileDialog(puzzles);
+
+		if (npd.isConfirmed()) {
+			final Profile p = npd.getNewProfile();
+			LOGGER.info(p.toString());
+			try {
+				db.addProfile(p);
+				buildPuzzleMenu();
+			} catch (final SQLException e) {
+				e.printStackTrace();
+				LOGGER.severe(e.getLocalizedMessage());
+				setInfo(e.getLocalizedMessage());
+			}
+		}
 
 	}
 
