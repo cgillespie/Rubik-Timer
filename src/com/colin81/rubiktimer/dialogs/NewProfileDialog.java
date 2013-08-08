@@ -34,7 +34,7 @@ public class NewProfileDialog extends JDialog implements ActionListener {
 	private boolean confirmed;
 	private final JTextField descriptionEntry;
 
-	public NewProfileDialog(final List<Puzzle> puzzles) {
+	public NewProfileDialog(final List<Puzzle> puzzles, final Puzzle selected) {
 		puzzleNames = new HashMap<String, Puzzle>();
 
 		setMinimumSize(new Dimension(380, 175));
@@ -52,6 +52,7 @@ public class NewProfileDialog extends JDialog implements ActionListener {
 			comboBox.addItem(p.getName());
 			puzzleNames.put(p.getName(), p);
 		}
+		comboBox.setSelectedItem(selected.getName());
 		getContentPane().add(comboBox, "cell 1 0,growx");
 
 		final JLabel lblProfileName = new JLabel("Profile Name");
@@ -77,7 +78,7 @@ public class NewProfileDialog extends JDialog implements ActionListener {
 		getContentPane().add(btnOk, "flowx,cell 1 4,alignx right");
 
 		btnCancel = new JButton("Cancel");
-		btnOk.addActionListener(this);
+		btnCancel.addActionListener(this);
 		getContentPane().add(btnCancel, "cell 1 4");
 
 		setVisible(true);
@@ -86,7 +87,9 @@ public class NewProfileDialog extends JDialog implements ActionListener {
 	@Override
 	public void actionPerformed(final ActionEvent e) {
 		if (e.getSource().equals(btnOk)) {
-			if (!nameEntry.getText().equals("")) {
+			if (!nameEntry.getText().trim().equals("")
+					&& !nameEntry.getText().trim()
+							.equals("Please enter a name")) {
 				profile = new Profile();
 				profile.setName(nameEntry.getText());
 				System.out.println(comboBox.getSelectedItem());

@@ -117,7 +117,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	private void addProfile(final Puzzle target) {
 		LOGGER.info("Creating new Profile for Puzzle: " + target.getName());
-		final NewProfileDialog npd = new NewProfileDialog(puzzles);
+		final NewProfileDialog npd = new NewProfileDialog(puzzles, target);
 
 		if (npd.isConfirmed()) {
 			final Profile p = npd.getNewProfile();
