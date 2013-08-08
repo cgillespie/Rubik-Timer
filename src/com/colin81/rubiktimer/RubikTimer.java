@@ -55,7 +55,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	public static final String TITLE = "Rubik Timer";
 	public static final String VERSION = "v0.0.1";
-	public static final String COPYRIGHT = "� Copyright Colin Gillespie 2013";
+	public static final String COPYRIGHT = "(c) Copyright Colin Gillespie 2013";
 	public static final String DESCRIPTION = "Basic competition style puzzle timer.";
 	public static final boolean STABLE = false;
 
@@ -65,10 +65,13 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	/** Maps menu items for creating a new Profile to its associated Puzzle */
 	private Map<JMenuItem, Puzzle> newProfileMenuMap;
+	private Map<JMenuItem, Profile> profileMenuMap;
 
 	private File dataDir;
 	private static final String newProfileCommand = "NEW_PROFILE";
+	private static final String setProfileCommand = "SET_PROFILE";
 	private DBConnector db;
+	private Profile currentProfile;
 
 	private AboutInfo aboutInfo;
 	private JMenu mnPuzzle;
@@ -109,7 +112,11 @@ public class RubikTimer extends JPanel implements ActionListener {
 	public void actionPerformed(final ActionEvent e) {
 		if (e.getActionCommand().equals(newProfileCommand)) {
 			addProfile(newProfileMenuMap.get(e.getSource()));
+		} else if (e.getActionCommand().equals(setProfileCommand)) {
+			currentProfile = profileMenuMap.get(e.getSource());
+			LOGGER.info("Setting profile to " + currentProfile);
 		} else if (e.getSource() == mntmAbout) {
+
 			final AboutDialog ad = new AboutDialog(aboutInfo);
 			ad.setVisible(true);
 		} else if (e.getSource() == mntmNewPuzzle) {
@@ -180,17 +187,20 @@ public class RubikTimer extends JPanel implements ActionListener {
 		}
 
 		profiles = db.getProfiles();
+		profileMenuMap = new HashMap<JMenuItem, Profile>(profiles.size());
 		LOGGER.info(String.valueOf(mnPuzzle.getMenuComponentCount()));
 
 		for (int i = 0; i < profiles.size(); i++) {
 			final Profile p = profiles.get(i);
 			final JMenuItem item = new JMenuItem(p.getName());
-
+			item.setActionCommand(setProfileCommand);
 			item.addActionListener(this);
-			System.out.println(p.getId());
+
 			final JMenu menu = (JMenu) mnPuzzle.getMenuComponent(p.getPuzzle()
 					.getId() - 1);
 			menu.add(item, 0);
+
+			profileMenuMap.put(item, p);
 		}
 
 	}
@@ -293,7 +303,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 		final JLabel lblTimes = new JLabel("Times");
 		scrollPane.setColumnHeaderView(lblTimes);
 
-		final JButton btnStart = new JButton("Start");
+		final ButtonTimer btnStart = new ButtonTimer();
 		panel_1.add(btnStart,
 				"cell 0 1,width max(400, 80%),alignx center,height max(300, 40%),aligny center");
 
