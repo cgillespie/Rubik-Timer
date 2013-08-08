@@ -25,13 +25,13 @@ public class DBConnector {
 	/* The id field for SQLite tables is stored in the hidden field rowid */
 
 	private static final String PUZZLE_TABLE = "Puzzle";
-	private static final String PUZZLE_NAME = "Name";
+	private static final String PUZZLE_NAME = "Puz_Name";
 	private static final String PUZZLE_SCRAMBLE = "Scrambler";
 	private static final String PUZZLE_IMAGE = "Image";
 
 	private static final String PROFILE_TABLE = "Profile";
 	private static final String PROFILE_PUZZLE = "Puzzle";
-	private static final String PROFILE_NAME = "Name";
+	private static final String PROFILE_NAME = "Pro_Name";
 	private static final String PROFILE_DESC = "Description";
 
 	private static final String SOLVE_TABLE = "Solve";
@@ -46,7 +46,7 @@ public class DBConnector {
 	public DBConnector(final File database) throws SQLException,
 			ClassNotFoundException {
 		LOGGER.setLevel(Level.ALL);
-		LOGGER.info("constructing");
+		LOGGER.info("constructing: " + database.getAbsolutePath());
 
 		LOGGER.info("Loading sqlite connector");
 		Class.forName("org.sqlite.JDBC");
@@ -195,18 +195,26 @@ public class DBConnector {
 	 * @see Profile
 	 */
 	public List<Profile> getProfiles() throws SQLException {
-		final String qry = String.format("SELECT rowid, * FROM %s",
-				PROFILE_TABLE);
-
+		final String qry = String
+				.format("SELECT %1$s.rowid AS id_a, %2$s.rowid AS id_b, * FROM %1$s INNER JOIN %2$s ON %1$s.rowid=%2$s.rowid",
+						PROFILE_TABLE, PUZZLE_TABLE);
+		LOGGER.info(qry);
 		final ResultSet rs = statement.executeQuery(qry);
 		final List<Profile> profiles = new ArrayList<Profile>();
 
 		while (rs.next()) {
-			final Profile p = new Profile(rs.getInt("rowid"));
-			p.setPuzzle(getPuzzle(rs.getInt(PROFILE_PUZZLE)));
+			final Profile p = new Profile(rs.getInt("id_a"));
 			p.setName(rs.getString(PROFILE_NAME));
 			p.setDescription(rs.getString(PROFILE_DESC));
+			final Puzzle puzzle = new Puzzle(rs.getInt("id_b"));
+			puzzle.setName(rs.getString(PUZZLE_NAME));
+			puzzle.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
+			puzzle.setImage(rs.getString(PUZZLE_IMAGE));
+			p.setPuzzle(puzzle);
 			profiles.add(p);
+
+			// TODO remove
+			System.out.println(p);
 		}
 
 		return profiles;
@@ -321,19 +329,23 @@ public class DBConnector {
 				PUZZLE_SCRAMBLE, PUZZLE_IMAGE);
 		statement.executeUpdate(createPuzzle);
 
-		final String createProfile = String
-				.format("CREATE TABLE IF NOT EXISTS %s "
-						+ "(%s INTEGER NOT NULL, %s TEXT NOT NULL, %s TEXT NULLABLE);",
-						PROFILE_TABLE, PROFILE_PUZZLE, PROFILE_NAME,
-						PROFILE_DESC);
+		final String createProfile = String.format(
+				"CREATE TABLE IF NOT EXISTS %s "
+						+ "(%s INTEGER NOT NULL, %s TEXT NOT NULL, %s TEXT, "
+						+ "FOREIGN KEY(%s) REFERENCES %s(rowid));",
+				PROFILE_TABLE, PROFILE_PUZZLE, PROFILE_NAME, PROFILE_DESC,
+				PROFILE_PUZZLE, PUZZLE_TABLE);
 		statement.executeUpdate(createProfile);
 
 		final String createSolve = String.format(
-				"CREATE TABLE IF NOT EXISTS %s (%s	INTEGER	NOT NULL,"
-						+ "%s	TEXT," + "%s	INTEGER	NOT NULL,"
-						+ "%s	INTEGER NOT NULL);", SOLVE_TABLE, SOLVE_PROFILE,
-				SOLVE_SCRAMBLE, SOLVE_TIME, SOLVE_DATETIME);
+				"CREATE TABLE IF NOT EXISTS %s (%s	INTEGER	NOT NULL, "
+						+ "%s TEXT, " + "%s INTEGER NOT NULL, "
+						+ "%s INTEGER NOT NULL, "
+						+ "FOREIGN KEY(%s) REFERENCES %s(rowid));",
+				SOLVE_TABLE, SOLVE_PROFILE, SOLVE_SCRAMBLE, SOLVE_TIME,
+				SOLVE_DATETIME, SOLVE_PROFILE, PROFILE_TABLE);
 		statement.executeUpdate(createSolve);
+
 	}
 
 	/**

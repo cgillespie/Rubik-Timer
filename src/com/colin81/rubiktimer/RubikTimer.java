@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -82,9 +81,14 @@ public class RubikTimer extends JPanel implements ActionListener {
 		// TODO: show a loading screen here
 		try {
 			buildUI();
-			dataDir = new File(home + delim + ".rubiktimer" + delim);
-			dataDir.createNewFile();
-			db = new DBConnector(new File(dataDir + "default.db"));
+			dataDir = new File(home + delim + ".rubiktimer");
+			dataDir.mkdir();
+			if (!dataDir.exists()) {
+				// use installation directory if home is unavailable
+				dataDir = new File("data");
+				dataDir.mkdir();
+			}
+			db = new DBConnector(new File(dataDir + delim + "default.db"));
 			initPane();
 		} catch (final SQLException e) {
 			LOGGER.severe(e.getLocalizedMessage());
@@ -93,10 +97,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 		} catch (final ClassNotFoundException e) {
 			LOGGER.severe(e.getLocalizedMessage());
 			// TODO: show error message on the loading screen
-			e.printStackTrace();
-		} catch (final IOException e) {
-			LOGGER.severe(e.getLocalizedMessage());
-			// TODO show error message on the loading screen
 			e.printStackTrace();
 		}
 
@@ -176,20 +176,20 @@ public class RubikTimer extends JPanel implements ActionListener {
 			newProfileMenuMap.put(mntmNewProfile, p);
 		}
 
-		try {
-			profiles = db.getProfiles();
-			for (int i = 0; i < profiles.size(); i++) {
-				final Profile p = profiles.get(i);
-				final JMenuItem item = new JMenuItem(p.getName());
+		profiles = db.getProfiles();
+		LOGGER.info(String.valueOf(mnPuzzle.getMenuComponentCount()));
 
-				item.addActionListener(this);
-				final JMenu menu = (JMenu) mnPuzzle.getComponent(p.getPuzzle()
-						.getId());
-				menu.add(item);
-			}
-		} catch (final NullPointerException e) {
+		for (int i = 0; i < profiles.size(); i++) {
+			final Profile p = profiles.get(i);
+			final JMenuItem item = new JMenuItem(p.getName());
 
+			item.addActionListener(this);
+			System.out.println(p.getId());
+			final JMenu menu = (JMenu) mnPuzzle.getMenuComponent(p.getPuzzle()
+					.getId() - 1);
+			menu.add(item, 0);
 		}
+
 	}
 
 	private void buildUI() {
@@ -338,7 +338,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	private void initPane() throws SQLException {
 		buildPuzzleMenu();
-		solves = db.getSolves();
+		// solves = db.getSolves();
 	}
 
 	private void setInfo(final String msg) {
