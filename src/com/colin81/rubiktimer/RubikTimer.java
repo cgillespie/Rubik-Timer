@@ -33,6 +33,7 @@ import net.miginfocom.swing.MigLayout;
 
 import com.colin81.rubiktimer.dialogs.AboutDialog;
 import com.colin81.rubiktimer.dialogs.AboutInfo;
+import com.colin81.rubiktimer.dialogs.LoadingScreen;
 import com.colin81.rubiktimer.dialogs.NewProfileDialog;
 import com.colin81.rubiktimer.dialogs.NewPuzzleDialog;
 
@@ -79,6 +80,8 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	public RubikTimer() {
 		// TODO: show a loading screen here
+		final LoadingScreen loader = new LoadingScreen();
+
 		try {
 			buildUI();
 			dataDir = new File(home + delim + ".rubiktimer");
@@ -347,5 +350,9 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	private void setProgress(final int percent) {
 		progressBar.setValue(percent);
+	}
+
+	private void showLoadingScreen() {
+
 	}
 }
