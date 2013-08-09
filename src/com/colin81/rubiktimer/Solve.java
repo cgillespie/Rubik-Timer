@@ -5,8 +5,8 @@ public class Solve {
 	private int id;
 	private Profile profile;
 	private String scramble;
-	private int solveTime;
-	private int dateTime;
+	private long solveTime;
+	private long dateTime;
 
 	public Solve() {
 
@@ -31,6 +31,9 @@ public class Solve {
 		if (dateTime != other.dateTime) {
 			return false;
 		}
+		if (id != other.id) {
+			return false;
+		}
 		if (profile == null) {
 			if (other.profile != null) {
 				return false;
@@ -51,7 +54,7 @@ public class Solve {
 		return true;
 	}
 
-	public int getDateTime() {
+	public long getDateTime() {
 		return dateTime;
 	}
 
@@ -67,7 +70,7 @@ public class Solve {
 		return scramble;
 	}
 
-	public int getSolveTime() {
+	public long getSolveTime() {
 		return solveTime;
 	}
 
@@ -75,14 +78,16 @@ public class Solve {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + dateTime;
-		result = prime * result + (profile == null ? 0 : profile.hashCode());
-		result = prime * result + (scramble == null ? 0 : scramble.hashCode());
-		result = prime * result + solveTime;
+		result = prime * result + (int) (dateTime ^ (dateTime >>> 32));
+		result = prime * result + id;
+		result = prime * result + ((profile == null) ? 0 : profile.hashCode());
+		result = prime * result
+				+ ((scramble == null) ? 0 : scramble.hashCode());
+		result = prime * result + (int) (solveTime ^ (solveTime >>> 32));
 		return result;
 	}
 
-	public void setDateTime(final int dateTime) {
+	public void setDateTime(final long dateTime) {
 		this.dateTime = dateTime;
 	}
 
@@ -94,7 +99,7 @@ public class Solve {
 		this.scramble = scramble;
 	}
 
-	public void setSolveTime(final int solveTime) {
+	public void setSolveTime(final long solveTime) {
 		this.solveTime = solveTime;
 	}
 

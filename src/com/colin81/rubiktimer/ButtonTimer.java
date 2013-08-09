@@ -3,6 +3,7 @@ package com.colin81.rubiktimer;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JButton;
 import javax.swing.Timer;
@@ -10,32 +11,38 @@ import javax.swing.Timer;
 public class ButtonTimer extends JButton implements ActionListener {
 	private static final long serialVersionUID = -7575546735358311744L;
 
+	private final Timer timer;
 	private boolean running;
+	private long startTime;
+	private long finishTime;
+	private long totalTime;
 
 	public ButtonTimer() {
 		super("00:00:00");
+		timer = new Timer(10, this);
 		running = false;
 	}
 
 	@Override
-	public void actionPerformed(final ActionEvent arg0) {
-		if (running) {
-			running = false;
-		} else {
-			running = true;
-			final long startTime = System.currentTimeMillis();
-			final Timer timer = new Timer(10, new ActionListener() {
+	public void actionPerformed(final ActionEvent e) {
+		totalTime = System.currentTimeMillis() - startTime;
+		setText(Utils.milliFormat(totalTime));
 
-				@Override
-				public void actionPerformed(final ActionEvent arg0) {
-					final long now = System.currentTimeMillis();
-					ButtonTimer.this.setText("");
+	}
 
-				}
+	public long getDate() {
+		return finishTime;
+	}
 
-			});
+	public long getTime() {
+		return totalTime;
+	}
+
+	public boolean isFinished() {
+		if (!running && totalTime > 0) {
+			return true;
 		}
-
+		return false;
 	}
 
 	@Override
@@ -49,8 +56,19 @@ public class ButtonTimer extends JButton implements ActionListener {
 		setText(t);
 	}
 
-	private String timeFormat(final long time) {
-		return "";
+	public void startStop(final KeyEvent e) {
+		if (running) {
+			timer.stop();
+			running = false;
+			finishTime = e.getWhen();
+			totalTime = finishTime - startTime;
+			setText(Utils.milliFormat(totalTime));
+		} else {
+			running = true;
+			timer.start();
+			startTime = System.currentTimeMillis();
+
+		}
 	}
 
 }

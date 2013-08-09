@@ -57,7 +57,7 @@ public class DBConnector {
 
 		initDB();
 		// TODO: remove after debugging
-		// printAll();
+		printAll();
 	}
 
 	/**
@@ -120,12 +120,11 @@ public class DBConnector {
 		// TODO: check for uniqueness of solve???
 		// could be intensive - better handled by app?
 
-		final String qry = String
-				.format("INSERT INTO %s (%s, %s, %s, %s) VALUES ('%d', '%s', '%d', '%d')",
-						SOLVE_TABLE, SOLVE_PROFILE, SOLVE_SCRAMBLE, SOLVE_TIME,
-						SOLVE_DATETIME, solve.getProfile().getId(),
-						solve.getScramble(), solve.getSolveTime(),
-						solve.getDateTime());
+		final String qry = String.format(
+				"INSERT INTO %s (%s, %s, %s, %s) VALUES (%d, '%s', %d, %d)",
+				SOLVE_TABLE, SOLVE_PROFILE, SOLVE_SCRAMBLE, SOLVE_TIME,
+				SOLVE_DATETIME, solve.getProfile().getId(),
+				solve.getScramble(), solve.getSolveTime(), solve.getDateTime());
 
 		statement.executeUpdate(qry);
 		return getLastInsertId(PUZZLE_TABLE);
@@ -196,7 +195,7 @@ public class DBConnector {
 	 */
 	public List<Profile> getProfiles() throws SQLException {
 		final String qry = String
-				.format("SELECT %1$s.rowid AS id_a, %2$s.rowid AS id_b, * FROM %1$s INNER JOIN %2$s ON %1$s.rowid=%2$s.rowid",
+				.format("SELECT %1$s.rowid AS id_a, %2$s.rowid AS id_b, * FROM %1$s INNER JOIN %2$s ON id_a=id_b",
 						PROFILE_TABLE, PUZZLE_TABLE);
 		LOGGER.info(qry);
 		final ResultSet rs = statement.executeQuery(qry);
@@ -288,29 +287,63 @@ public class DBConnector {
 	 * @see Solve
 	 */
 	public List<Solve> getSolves() throws SQLException {
-		final String qry = String.format("SELECT * FROM %s", SOLVE_TABLE);
-		return getSolvesFromQuery(qry);
+		LOGGER.info("Retrieving all solves");
+		final String qry = String
+				.format("SELECT rowid, * FROM %s", SOLVE_TABLE);
+		return getSolvesFromQueryWhere(qry);
 	}
 
 	public List<Solve> getSolvesForProfile(final Profile p) throws SQLException {
-		final String qry = String.format("SELECT * FROM %s WHERE %s=%d",
+		final String qry = String.format("SELECT rowid, * FROM %s WHERE %s=%d",
 				SOLVE_TABLE, SOLVE_PROFILE, p.getId());
-		return getSolvesFromQuery(qry);
+
+		final ResultSet rs = statement.executeQuery(qry);
+		final List<Solve> solves = new ArrayList<Solve>();
+		LOGGER.info("getting solves from query: " + qry);
+
+		while (rs.next()) {
+			final Solve solve = new Solve(rs.getInt("rowid"));
+			solve.setScramble(rs.getString(SOLVE_SCRAMBLE));
+			solve.setSolveTime(rs.getInt(SOLVE_TIME));
+			solve.setDateTime(rs.getInt(SOLVE_DATETIME));
+			solve.setProfile(p);
+			solves.add(solve);
+			LOGGER.info(solve.toString());
+		}
+
+		return solves;
 	}
 
-	private List<Solve> getSolvesFromQuery(final String qry)
+	/**
+	 * 
+	 * @param qry
+	 *            The WHERE clause for the final query.
+	 * @return
+	 * @throws SQLException
+	 */
+	private List<Solve> getSolvesFromQueryWhere(final String qry)
 			throws SQLException {
 
 		final ResultSet rs = statement.executeQuery(qry);
 		final List<Solve> solves = new ArrayList<Solve>();
+		LOGGER.info("getting solves from query: " + qry);
 
 		while (rs.next()) {
-			final Solve s = new Solve(rs.getInt("rowid"));
-			s.setScramble(rs.getString(SOLVE_SCRAMBLE));
-			s.setSolveTime(rs.getInt(SOLVE_TIME));
-			s.setDateTime(rs.getInt(SOLVE_DATETIME));
-			s.setProfile(getProfile(rs.getInt(SOLVE_PROFILE)));
-			solves.add(s);
+			final Solve solve = new Solve(rs.getInt("id_a"));
+			solve.setScramble(rs.getString(SOLVE_SCRAMBLE));
+			solve.setSolveTime(rs.getInt(SOLVE_TIME));
+			solve.setDateTime(rs.getInt(SOLVE_DATETIME));
+			final Profile profile = new Profile(rs.getInt("id_b"));
+			profile.setName(rs.getString(PROFILE_NAME));
+			profile.setDescription(rs.getString(PROFILE_DESC));
+			final Puzzle puzzle = new Puzzle(rs.getInt("id_c"));
+			puzzle.setName(rs.getString(PUZZLE_NAME));
+			puzzle.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
+			puzzle.setImage(rs.getString(PUZZLE_IMAGE));
+			profile.setPuzzle(puzzle);
+			solve.setProfile(profile);
+			solves.add(solve);
+			LOGGER.info(solve.toString());
 		}
 
 		return solves;
