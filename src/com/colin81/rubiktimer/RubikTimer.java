@@ -8,10 +8,16 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.swing.Box;
@@ -71,6 +77,10 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private File dataDir;
 	private static final String newProfileCommand = "NEW_PROFILE";
 	private static final String setProfileCommand = "SET_PROFILE";
+
+	private int inspectionTime;
+	private String defaultProfile;
+
 	private DBConnector db;
 	private Profile currentProfile;
 
@@ -88,6 +98,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 		try {
 			buildUI();
+
 			dataDir = new File(home + delim + ".rubiktimer");
 			dataDir.mkdir();
 			if (!dataDir.exists()) {
@@ -95,6 +106,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 				dataDir = new File("data");
 				dataDir.mkdir();
 			}
+			loadPreferences();
 			db = new DBConnector(new File(dataDir + delim + "default.db"));
 			initPane();
 		} catch (final SQLException e) {
@@ -401,6 +413,45 @@ public class RubikTimer extends JPanel implements ActionListener {
 			System.out.println(s);
 		}
 
+	}
+
+	private void loadPreferences() {
+		final Properties props = new Properties();
+		InputStream is = null;
+		try {
+			final File f = new File(dataDir.getAbsoluteFile() + delim
+					+ "rubik-timer.properties");
+			if (!f.exists()) {
+				savePreferences();
+			}
+			is = new FileInputStream(f);
+		} catch (final IOException e) {
+			LOGGER.severe(e.getLocalizedMessage());
+			e.printStackTrace();
+		}
+
+		defaultProfile = props.getProperty("DefaultProfile");
+		inspectionTime = Integer.valueOf(props.getProperty("InspectionTime",
+				"15"));
+
+	}
+
+	private void savePreferences() {
+		try {
+			final Properties props = new Properties();
+			if (currentProfile == null) {
+				props.setProperty("DefaultProfile", "null");
+			} else {
+				props.setProperty("DefaultProfile", currentProfile.getName());
+			}
+			props.setProperty("InspectionTime", "15");
+			final File f = new File(dataDir.getAbsoluteFile() + delim
+					+ "rubik-timer.properties");
+			final OutputStream out = new FileOutputStream(f);
+			props.store(out, "This is an optional header comment string");
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void saveSolve(final long time, final long date,
