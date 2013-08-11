@@ -1,5 +1,7 @@
 package com.colin81.rubiktimer;
 
+import com.colin81.rubiktimer.scramblers.Scrambler;
+
 public class Puzzle {
 
 	private int id;
@@ -90,6 +92,15 @@ public class Puzzle {
 		this.name = name;
 	}
 
+	/**
+	 * Sets the scrambler path. This has to be a fully qualified java class
+	 * name. This is made up of the package name and the class name separated by
+	 * '.' Example: 'org.example.MyScrambler'
+	 * 
+	 * @param scrambler
+	 *            The fully qualified class name for the scrambler
+	 * @see Scrambler
+	 */
 	public void setScrambler(final String scrambler) {
 		this.scrambler = scrambler;
 	}

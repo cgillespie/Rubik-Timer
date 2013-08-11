@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
@@ -20,6 +22,7 @@ import net.miginfocom.swing.MigLayout;
 
 import com.colin81.rubiktimer.DBConnector;
 import com.colin81.rubiktimer.Puzzle;
+import com.colin81.rubiktimer.Utils;
 
 public class NewPuzzleDialog extends JDialog implements ActionListener {
 
@@ -38,19 +41,19 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 	private JFileChooser chooser;
 
 	private final String dir;
-	private String scramblerLoc;
+	private String scramblerName;
 	private String imageLoc;
 	private Puzzle puzzle = null;
 	private boolean confirmed;
 
-	public NewPuzzleDialog(final String dir) {
+	public NewPuzzleDialog(final String dataDir) {
 		setMinimumSize(new Dimension(300, 150));
 		this.setModal(true);
 		setLocationRelativeTo(null);
 		// setResizable(false);
 		// setSize(320, 140);
 
-		this.dir = dir;
+		this.dir = dataDir;
 		setTitle("Add New Puzzle");
 		getContentPane().setLayout(new BorderLayout(0, 0));
 
@@ -114,7 +117,8 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 		} else if (e.getSource() == btnOk) {
 			if (!textField.getText().equals("")) {
 				puzzle = new Puzzle(textField.getText());
-				puzzle.setScrambler(scramblerLoc);
+
+				puzzle.setScrambler(scramblerName);
 				puzzle.setImage(imageLoc);
 
 				confirmed = true;
@@ -128,7 +132,9 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 			}
 		} else if (e.getSource() == btnChooseScrambler) {
 			LOGGER.info(dir);
-			chooser = new JFileChooser(dir);
+			final String scrambleDir = dir
+					+ System.getProperty("file.separator") + "Scramblers";
+			chooser = new JFileChooser(scrambleDir);
 
 			final FileNameExtensionFilter filter = new FileNameExtensionFilter(
 					"Java Class Files", "class");
@@ -137,7 +143,13 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 			final int returnVal = chooser.showOpenDialog(this);
 
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				scramblerLoc = chooser.getSelectedFile().getAbsolutePath();
+
+				final Path pathAbsolute = Paths.get(chooser.getSelectedFile()
+						.getAbsolutePath());
+				final Path pathBase = Paths.get(scrambleDir);
+				final Path pathRelative = pathBase.relativize(pathAbsolute);
+
+				scramblerName = Utils.pathToQualifiedName(pathRelative.toString());
 				lblScramblePath.setText(chooser.getSelectedFile().getName());
 			}
 

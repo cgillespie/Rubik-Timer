@@ -8,6 +8,10 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +41,7 @@ import com.colin81.rubiktimer.dialogs.AboutInfo;
 import com.colin81.rubiktimer.dialogs.LoadingScreen;
 import com.colin81.rubiktimer.dialogs.NewProfileDialog;
 import com.colin81.rubiktimer.dialogs.NewPuzzleDialog;
+import com.colin81.rubiktimer.scramblers.Scrambler;
 
 /**
  * @version 0.0.0
@@ -73,6 +78,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private static final String setProfileCommand = "SET_PROFILE";
 	private DBConnector db;
 	private Profile currentProfile;
+	private Scrambler currentScrambler;
 
 	private AboutInfo aboutInfo;
 	private JMenu mnPuzzle;
@@ -89,12 +95,21 @@ public class RubikTimer extends JPanel implements ActionListener {
 		try {
 			buildUI();
 			dataDir = new File(home + delim + ".rubiktimer");
+
 			dataDir.mkdir();
+
 			if (!dataDir.exists()) {
 				// use installation directory if home is unavailable
 				dataDir = new File("data");
 				dataDir.mkdir();
 			}
+			final File scramblers = new File(dataDir.getAbsolutePath() + delim
+					+ "Scramblers");
+			final File images = new File(dataDir.getAbsolutePath() + delim
+					+ "Images");
+			scramblers.mkdir();
+			images.mkdir();
+
 			db = new DBConnector(new File(dataDir + delim + "default.db"));
 			initPane();
 		} catch (final SQLException e) {
@@ -113,13 +128,17 @@ public class RubikTimer extends JPanel implements ActionListener {
 	public void actionPerformed(final ActionEvent e) {
 		if (e.getActionCommand().equals(newProfileCommand)) {
 			addProfile(newProfileMenuMap.get(e.getSource()));
+
 		} else if (e.getActionCommand().equals(setProfileCommand)) {
 			currentProfile = profileMenuMap.get(e.getSource());
 			LOGGER.info("Setting profile to " + currentProfile);
+			currentScrambler = loadScrambler(currentProfile.getPuzzle()
+					.getScrambler());
+			System.out.println(currentScrambler.getNewScramble(25));
 		} else if (e.getSource() == mntmAbout) {
-
 			final AboutDialog ad = new AboutDialog(aboutInfo);
 			ad.setVisible(true);
+
 		} else if (e.getSource() == mntmNewPuzzle) {
 			addPuzzle();
 		}
@@ -148,7 +167,8 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private void addPuzzle() {
 		LOGGER.info("someone requested a new puzzle");
 
-		final NewPuzzleDialog npd = new NewPuzzleDialog(dataDir + "scramblers");
+		final NewPuzzleDialog npd = new NewPuzzleDialog(
+				dataDir.getAbsolutePath());
 		if (npd.isConfirmed()) {
 			final Puzzle p = npd.getNewPuzzle();
 			LOGGER.info(p.toString());
@@ -188,7 +208,9 @@ public class RubikTimer extends JPanel implements ActionListener {
 		}
 
 		profiles = db.getProfiles();
-		currentProfile = profiles.get(0);
+		if (profiles.size() > 0) {
+			currentProfile = profiles.get(0);
+		}
 		profileMenuMap = new HashMap<JMenuItem, Profile>(profiles.size());
 		LOGGER.info(String.valueOf(mnPuzzle.getMenuComponentCount()));
 
@@ -396,10 +418,54 @@ public class RubikTimer extends JPanel implements ActionListener {
 		buildPuzzleMenu();
 		LOGGER.info("");
 
-		solves = db.getSolvesForProfile(currentProfile);
-		for (final Solve s : solves) {
-			System.out.println(s);
+		if (currentProfile != null) {
+			solves = db.getSolvesForProfile(currentProfile);
+			for (final Solve s : solves) {
+				System.out.println(s);
+			}
 		}
+
+	}
+
+	/**
+	 * Loads a class file from the scrambler directory. The folder structure
+	 * must match the package structure of the class file.
+	 * 
+	 * @param classFile
+	 *            The fully qualified class name of the scrambler
+	 * @return A new instance of the specified scrambler
+	 * @see Scrambler
+	 */
+	private Scrambler loadScrambler(final String classFile) {
+		LOGGER.info("Loading Scrambler: " + classFile);
+		try {
+			final File classesDir = new File(dataDir + delim + "Scramblers");
+			final ClassLoader parentLoader = Scrambler.class.getClassLoader();
+
+			final URLClassLoader loader = new URLClassLoader(
+					new URL[] { classesDir.toURI().toURL() }, parentLoader);
+			final Class<?> _class = loader.loadClass(classFile);
+			final Scrambler scrambler = (Scrambler) _class.newInstance();
+			loader.close();
+			return scrambler;
+
+		} catch (final ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (final MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (final InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (final IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (final IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
 
 	}
 
