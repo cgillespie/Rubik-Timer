@@ -449,6 +449,11 @@ public class RubikTimer extends JPanel implements ActionListener {
 			loader.close();
 			return scrambler;
 
+		} catch (final ClassCastException e) {
+			LOGGER.severe("Scrambler is invalid or doesn't exists: "
+					+ e.getLocalizedMessage());
+			setInfo("Scrambler is invalid or doesn't exists!");
+			e.printStackTrace();
 		} catch (final ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (final MalformedURLException e) {

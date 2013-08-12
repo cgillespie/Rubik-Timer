@@ -131,9 +131,9 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 				textField.selectAll();
 			}
 		} else if (e.getSource() == btnChooseScrambler) {
-			LOGGER.info(dir);
 			final String scrambleDir = dir
 					+ System.getProperty("file.separator") + "Scramblers";
+			LOGGER.info(scrambleDir);
 			chooser = new JFileChooser(scrambleDir);
 
 			final FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -149,7 +149,8 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 				final Path pathBase = Paths.get(scrambleDir);
 				final Path pathRelative = pathBase.relativize(pathAbsolute);
 
-				scramblerName = Utils.pathToQualifiedName(pathRelative.toString());
+				scramblerName = Utils.pathToQualifiedName(pathRelative
+						.toString());
 				lblScramblePath.setText(chooser.getSelectedFile().getName());
 			}
 
