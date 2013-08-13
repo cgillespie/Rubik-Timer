@@ -18,7 +18,7 @@ public class ButtonTimer extends JButton implements ActionListener {
 	private long totalTime;
 
 	public ButtonTimer() {
-		super("00:00:00");
+		super(Utils.milliFormat(0));
 		timer = new Timer(10, this);
 		running = false;
 	}
@@ -45,6 +45,10 @@ public class ButtonTimer extends JButton implements ActionListener {
 		return false;
 	}
 
+	public boolean isRunning() {
+		return running;
+	}
+
 	@Override
 	protected void paintComponent(final Graphics g) {
 		final int h = this.getHeight();
@@ -54,6 +58,12 @@ public class ButtonTimer extends JButton implements ActionListener {
 		setText("<html><span style='font-size:" + (resizal * 11) + "'>" + t);
 		super.paintComponent(g);
 		setText(t);
+	}
+
+	public void reset() {
+		setText(Utils.milliFormat(0));
+		running = false;
+		startTime = finishTime = totalTime = 0;
 	}
 
 	public void startStop(final KeyEvent e) {

@@ -7,6 +7,7 @@ public class Puzzle {
 	private int id;
 	private String name;
 	private String scrambler;
+	private Scrambler scramblerObject;
 	private String image;
 
 	public Puzzle() {
@@ -73,6 +74,10 @@ public class Puzzle {
 		return scrambler;
 	}
 
+	public Scrambler getScramblerObject() {
+		return scramblerObject;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -103,6 +108,10 @@ public class Puzzle {
 	 */
 	public void setScrambler(final String scrambler) {
 		this.scrambler = scrambler;
+	}
+
+	public void setScramblerObject(final Scrambler scramblerObject) {
+		this.scramblerObject = scramblerObject;
 	}
 
 	@Override

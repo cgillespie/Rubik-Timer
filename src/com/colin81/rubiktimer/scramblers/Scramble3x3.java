@@ -4,6 +4,8 @@ import java.util.Random;
 
 public class Scramble3x3 implements Scrambler {
 
+	public static final int DEFAULT_LENGTH = 25;
+
 	private static final String description = "Standard 3x3x3 scrambler.";
 
 	public static void main(final String[] args) {
@@ -19,6 +21,12 @@ public class Scramble3x3 implements Scrambler {
 	private final String axisZ[] = { "F", "B" };
 
 	private final String rot[] = { "", "\'", "2" };
+
+	@Override
+	public int getDefaultSize() {
+		// TODO Auto-generated method stub
+		return Scramble3x3.DEFAULT_LENGTH;
+	}
 
 	@Override
 	public String getDescription() {
