@@ -5,6 +5,8 @@ import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.List;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -12,12 +14,15 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.ListCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
 
 import com.colin81.rubiktimer.scramblers.Scrambler;
 
 public class TimerPane extends JPanel implements KeyEventDispatcher {
+
+	private static Logger LOGGER = Logger.getLogger(TimerPane.class.getName());
 
 	private static final long serialVersionUID = -6280966529253447993L;
 
@@ -26,7 +31,9 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private JButton btnDiscard;
 
 	private JLabel lblScrambleData;
+	private JList<Solve> jlistSolves;
 
+	private final StorageInterface db;
 	private Scrambler scrambler;
 	private Profile profile;
 
@@ -34,19 +41,15 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	 * Sandbox mode is a free form timing mode for when no solving profile is
 	 * specified. It lacks generating scrambles and saving times.
 	 */
-	private final boolean sandbox = false;
+	private boolean sandbox = false;
 
-	public TimerPane(final Profile profile) {
+	public TimerPane(final StorageInterface db, final Profile profile) {
+		this.db = db;
+
 		final KeyboardFocusManager manager = KeyboardFocusManager
 				.getCurrentKeyboardFocusManager();
 		manager.addKeyEventDispatcher(this);
 		setProfile(profile);
-		/*
-		 * if (profile != null) { sandbox = false;
-		 * 
-		 * buildPane(); requestNewScramble(); } else { sandbox = true;
-		 * buildSandBoxPane(); }
-		 */
 
 	}
 
@@ -60,8 +63,8 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 		final JScrollPane scrollPane = new JScrollPane();
 		add(scrollPane, "cell 1 0 1 3,width min(400),grow");
 
-		final JList<String> list = new JList<String>();
-		scrollPane.setViewportView(list);
+		updateSolves();
+		scrollPane.setViewportView(jlistSolves);
 
 		final JLabel lblTimes = new JLabel("Times");
 		scrollPane.setColumnHeaderView(lblTimes);
@@ -80,8 +83,8 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 			public void actionPerformed(final ActionEvent e) {
 				btnKeep.setEnabled(false);
 				btnDiscard.setEnabled(false);
-				// saveSolve(btnTimer.getTime(), btnTimer.getDate(),
-				// lblScramble.getText());
+				saveSolve(btnTimer.getTime(), btnTimer.getDate(),
+						lblScramble.getText());
 			}
 
 		});
@@ -164,15 +167,52 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 	}
 
+	private void saveSolve(final long time, final long date,
+			final String scramble) {
+
+		final Solve s = new Solve();
+		s.setProfile(profile);
+		s.setSolveTime(time);
+		s.setDateTime(date);
+		s.setScramble(scramble);
+
+		try {
+			db.addSolve(s);
+		} catch (final Exception e) {
+			e.printStackTrace();
+			LOGGER.severe(e.getLocalizedMessage());
+		}
+	}
+
 	public void setProfile(final Profile profile) {
 		this.removeAll();
 		if (profile == null) {
+			sandbox = true;
 			buildSandBoxPane();
 		} else {
-			buildPane();
+			sandbox = false;
 			this.profile = profile;
 			this.scrambler = profile.getPuzzle().getScramblerObject();
+			buildPane();
+			requestNewScramble();
+			updateSolves();
 		}
 
+	}
+
+	private void updateSolves() {
+		try {
+			final List<Solve> solves = db.getSolves(profile);
+			LOGGER.info("Number of solves: " + solves.size());
+			final Solve[] a = solves.toArray(new Solve[solves.size()]);
+			jlistSolves = new JList<Solve>(a);
+
+			final ListCellRenderer<Solve> solveRender = new SolveRenderer();
+			jlistSolves.setCellRenderer(solveRender);
+
+		} catch (final Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

@@ -45,8 +45,7 @@ import com.colin81.rubiktimer.scramblers.Scrambler;
 
 public class RubikTimer extends JPanel implements ActionListener {
 
-	private static Logger LOGGER = Logger
-			.getLogger(DBConnector.class.getName());
+	private static Logger LOGGER = Logger.getLogger(RubikTimer.class.getName());
 
 	private static final String home = System.getProperty("user.home");
 	private static final String delim = System.getProperty("file.separator");
@@ -72,8 +71,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private static final String setProfileCommand = "SET_PROFILE";
 	private DBConnector db;
 	private Profile currentProfile;
-	private Scrambler currentScrambler;
-
 	private TimerPane timerPane;
 
 	private AboutInfo aboutInfo;
@@ -307,7 +304,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 		final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		add(tabbedPane, BorderLayout.CENTER);
 
-		timerPane = new TimerPane(currentProfile);
+		timerPane = new TimerPane(db, currentProfile);
 		tabbedPane.addTab("Timer", null, timerPane, null);
 
 		final JPanel panel = new JPanel();
@@ -331,7 +328,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 		try {
 			buildPuzzleMenu();
 			if (currentProfile != null) {
-				solves = db.getSolvesForProfile(currentProfile);
+				solves = db.getSolves(currentProfile);
 				for (final Solve s : solves) {
 					System.out.println(s);
 				}
@@ -388,22 +385,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 		return null;
 
-	}
-
-	private void saveSolve(final long time, final long date,
-			final String scramble) {
-		final Solve solve = new Solve();
-		solve.setProfile(currentProfile);
-		solve.setSolveTime(time);
-		solve.setDateTime(date);
-		solve.setScramble(scramble);
-		LOGGER.info("Saving " + solve);
-		try {
-			LOGGER.info("Solve added with id: " + db.addSolve(solve));
-		} catch (final SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	private void setInfo(final String msg) {

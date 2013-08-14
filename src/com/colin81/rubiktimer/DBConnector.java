@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  * @author Colin Gillespie
  * 
  */
-public class DBConnector {
+public class DBConnector implements StorageInterface {
 
 	private static Logger LOGGER = Logger
 			.getLogger(DBConnector.class.getName());
@@ -56,8 +56,6 @@ public class DBConnector {
 		statement = connection.createStatement();
 
 		initDB();
-		// TODO: remove after debugging
-		printAll();
 	}
 
 	/**
@@ -66,6 +64,7 @@ public class DBConnector {
 	 * @return
 	 * @throws SQLException
 	 */
+	@Override
 	public int addProfile(final Profile profile) throws SQLException {
 		final String qry = String.format(
 				"INSERT INTO %s (%s, %s, %s) VALUES (%s, '%s', '%s')",
@@ -85,6 +84,7 @@ public class DBConnector {
 	 * @throws SQLException
 	 * @see Puzzle
 	 */
+	@Override
 	public int addPuzzle(final Puzzle puzzle) throws SQLException {
 		/* check that puzzle is unique */
 		try {
@@ -116,6 +116,7 @@ public class DBConnector {
 	 * @throws SQLException
 	 * @see Solve
 	 */
+	@Override
 	public int addSolve(final Solve solve) throws SQLException {
 		// TODO: check for uniqueness of solve???
 		// could be intensive - better handled by app?
@@ -287,13 +288,15 @@ public class DBConnector {
 	 * @see Solve
 	 */
 	public List<Solve> getSolves() throws SQLException {
+		// TODO this method doesn't work.
 		LOGGER.info("Retrieving all solves");
 		final String qry = String
 				.format("SELECT rowid, * FROM %s", SOLVE_TABLE);
 		return getSolvesFromQueryWhere(qry);
 	}
 
-	public List<Solve> getSolvesForProfile(final Profile p) throws SQLException {
+	@Override
+	public List<Solve> getSolves(final Profile p) throws SQLException {
 		final String qry = String.format("SELECT rowid, * FROM %s WHERE %s=%d",
 				SOLVE_TABLE, SOLVE_PROFILE, p.getId());
 
@@ -379,31 +382,5 @@ public class DBConnector {
 				SOLVE_DATETIME, SOLVE_PROFILE, PROFILE_TABLE);
 		statement.executeUpdate(createSolve);
 
-	}
-
-	/**
-	 * prints contents of the db for debugging purposes
-	 */
-	public void printAll() {
-		try {
-			for (final Puzzle p : getPuzzles()) {
-				System.out.println(p.toString());
-			}
-			System.out
-					.println("\n---------------------------------------------\n");
-			for (final Profile p : getProfiles()) {
-				System.out.println(p.toString());
-			}
-			System.out
-					.println("\n---------------------------------------------\n");
-			for (final Solve s : getSolves()) {
-				System.out.println(s.toString());
-			}
-		} catch (final SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (final NullPointerException e1) {
-
-		}
 	}
 }
