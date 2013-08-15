@@ -127,6 +127,10 @@ public class RubikTimer extends JPanel implements ActionListener {
 			LOGGER.info("Setting profile to " + currentProfile);
 			currentProfile.getPuzzle().setScramblerObject(
 					loadScrambler(currentProfile.getPuzzle().getScrambler()));
+
+			// TODO make this arguement dynamic!
+			currentProfile.setInspectionTime(15);
+
 			timerPane.setProfile(currentProfile);
 
 		} else if (e.getSource() == mntmAbout) {
@@ -149,7 +153,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 			try {
 				db.addProfile(p);
 				buildPuzzleMenu();
-			} catch (final SQLException e) {
+			} catch (final Exception e) {
 				e.printStackTrace();
 				LOGGER.severe(e.getLocalizedMessage());
 				setInfo(e.getLocalizedMessage());
@@ -169,7 +173,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 			try {
 				db.addPuzzle(p);
 				buildPuzzleMenu();
-			} catch (final SQLException e) {
+			} catch (final Exception e) {
 				// TODO Auto-generated catch block
 				setInfo(e.getLocalizedMessage());
 			}
@@ -177,7 +181,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	}
 
-	private void buildPuzzleMenu() throws SQLException {
+	private void buildPuzzleMenu() throws Exception {
 		mnPuzzle.removeAll();
 		mnPuzzle.add(new JSeparator());
 		mnPuzzle.add(mntmNewPuzzle);
@@ -206,7 +210,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 			currentProfile = profiles.get(0);
 		}
 		profileMenuMap = new HashMap<JMenuItem, Profile>(profiles.size());
-		LOGGER.info(String.valueOf(mnPuzzle.getMenuComponentCount()));
 
 		for (int i = 0; i < profiles.size(); i++) {
 			final Profile p = profiles.get(i);
@@ -279,7 +282,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 		mntmNewPuzzle.setIcon(new ImageIcon(RubikTimer.class
 				.getResource("/images/new_con.gif")));
 		mntmNewPuzzle.addActionListener(this);
-		// mnPuzzle.add(mntmNewPuzzle);
 
 		final Component horizontalGlue = Box.createHorizontalGlue();
 		menuBar.add(horizontalGlue);
@@ -327,13 +329,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 		try {
 			buildPuzzleMenu();
-			if (currentProfile != null) {
-				solves = db.getSolves(currentProfile);
-				for (final Solve s : solves) {
-					System.out.println(s);
-				}
-			}
-		} catch (final SQLException e) {
+		} catch (final Exception e) {
 			LOGGER.severe(e.getLocalizedMessage());
 			e.printStackTrace();
 		}

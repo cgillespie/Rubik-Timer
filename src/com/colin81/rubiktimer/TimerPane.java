@@ -32,6 +32,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 	private JLabel lblScrambleData;
 	private JList<Solve> jlistSolves;
+	private JScrollPane scrollPane;
 
 	private final StorageInterface db;
 	private Scrambler scrambler;
@@ -45,7 +46,6 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 	public TimerPane(final StorageInterface db, final Profile profile) {
 		this.db = db;
-
 		final KeyboardFocusManager manager = KeyboardFocusManager
 				.getCurrentKeyboardFocusManager();
 		manager.addKeyEventDispatcher(this);
@@ -60,11 +60,10 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 		final JLabel lblScramble = new JLabel("Scramble");
 		add(lblScramble, "cell 0 0");
 
-		final JScrollPane scrollPane = new JScrollPane();
+		scrollPane = new JScrollPane();
 		add(scrollPane, "cell 1 0 1 3,width min(400),grow");
 
 		updateSolves();
-		scrollPane.setViewportView(jlistSolves);
 
 		final JLabel lblTimes = new JLabel("Times");
 		scrollPane.setColumnHeaderView(lblTimes);
@@ -74,7 +73,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 		btnKeep = new JButton("Keep");
 		btnDiscard = new JButton("Discard");
-		btnTimer = new ButtonTimer();
+		btnTimer = new ButtonTimer(profile.getInspectionTime());
 
 		btnKeep.setEnabled(false);
 		btnKeep.addActionListener(new ActionListener() {
@@ -85,6 +84,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 				btnDiscard.setEnabled(false);
 				saveSolve(btnTimer.getTime(), btnTimer.getDate(),
 						lblScramble.getText());
+				updateSolves();
 			}
 
 		});
@@ -123,7 +123,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private void buildSandBoxPane() {
 		setLayout(new MigLayout("", "[grow]"));
 
-		btnTimer = new ButtonTimer();
+		btnTimer = new ButtonTimer(0);
 		add(btnTimer,
 				"cell 0 0,width max(400, 80%),alignx center,height max(300, 40%),aligny center");
 
@@ -135,15 +135,16 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	 */
 	@Override
 	public boolean dispatchKeyEvent(final KeyEvent e) {
+
 		if (sandbox) {
 			if (e.getKeyCode() == KeyEvent.VK_SPACE
 					&& e.getID() == KeyEvent.KEY_PRESSED) {
-				btnTimer.startStop(e);
+				btnTimer.startStop();
 			}
 		} else {
 			if (e.getKeyCode() == KeyEvent.VK_SPACE
 					&& e.getID() == KeyEvent.KEY_PRESSED) {
-				btnTimer.startStop(e);
+				btnTimer.startStop();
 				if (btnTimer.isFinished()) {
 					btnKeep.setEnabled(true);
 					btnDiscard.setEnabled(true);
@@ -153,6 +154,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 					btnDiscard.setEnabled(false);
 				}
 			}
+
 		}
 		return false;
 	}
@@ -184,6 +186,10 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 		}
 	}
 
+	public void setInspectionTime(final int inspectionTime) {
+		this.profile.setInspectionTime(inspectionTime);
+	}
+
 	public void setProfile(final Profile profile) {
 		this.removeAll();
 		if (profile == null) {
@@ -195,7 +201,6 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 			this.scrambler = profile.getPuzzle().getScramblerObject();
 			buildPane();
 			requestNewScramble();
-			updateSolves();
 		}
 
 	}
@@ -203,15 +208,16 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private void updateSolves() {
 		try {
 			final List<Solve> solves = db.getSolves(profile);
-			LOGGER.info("Number of solves: " + solves.size());
-			final Solve[] a = solves.toArray(new Solve[solves.size()]);
-			jlistSolves = new JList<Solve>(a);
+			jlistSolves = new JList<Solve>(solves.toArray(new Solve[solves
+					.size()]));
+			jlistSolves.ensureIndexIsVisible(0);
 
 			final ListCellRenderer<Solve> solveRender = new SolveRenderer();
 			jlistSolves.setCellRenderer(solveRender);
-
+			scrollPane.setViewportView(jlistSolves);
+			scrollPane.scrollRectToVisible(getBounds());
 		} catch (final Exception e) {
-			// TODO Auto-generated catch block
+			LOGGER.severe(e.getLocalizedMessage());
 			e.printStackTrace();
 		}
 	}
