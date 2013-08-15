@@ -25,9 +25,16 @@ public class Utils {
 	 * @return
 	 */
 	public static String pathToQualifiedName(final String path) {
-		final String delim = System.getProperty("file.separator");
+		System.out.println("Qualifying path: " + path);
+		String delim = System.getProperty("file.separator");
+		// if using a windows style separator add the escape character
+		if (delim.equals("\\")) {
+			delim += "\\";
+		}
+		System.out.println("Detected path delimeter: " + delim);
 		String name = path.substring(0, path.lastIndexOf('.'));
 		name = name.replaceAll(delim, ".");
+		System.out.println("Qualified path: " + name);
 		return name;
 	}
 }
