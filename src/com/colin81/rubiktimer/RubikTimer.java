@@ -389,6 +389,9 @@ public class RubikTimer extends JPanel implements ActionListener {
 		final JSeparator separator_5 = new JSeparator();
 		panel_1.add(separator_5, "cell 1 3,growx");
 
+		final JPanel metronomePane = new MetronomePane();
+		tabbedPane.addTab("Metronome", null, metronomePane, null);
+
 		final JPanel panel = new JPanel();
 		add(panel, BorderLayout.SOUTH);
 		panel.setLayout(new BorderLayout(0, 0));
