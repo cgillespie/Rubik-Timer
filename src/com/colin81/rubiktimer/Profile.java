@@ -3,6 +3,7 @@ package com.colin81.rubiktimer;
 public class Profile {
 
 	private int id;
+	private int inspectionTime;
 	private Puzzle puzzle;
 	private String name;
 	private String description;
@@ -98,5 +99,13 @@ public class Profile {
 	public String toString() {
 		return "Profile [id=" + id + ", puzzle=" + puzzle + ", name=" + name
 				+ ", description=" + description + "]";
+	}
+
+	public int getInspectionTime() {
+		return inspectionTime;
+	}
+
+	public void setInspectionTime(int inspectionTime) {
+		this.inspectionTime = inspectionTime;
 	}
 }

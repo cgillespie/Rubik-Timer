@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  * @author Colin Gillespie
  * 
  */
-public class DBConnector {
+public class DBConnector implements StorageInterface {
 
 	private static Logger LOGGER = Logger
 			.getLogger(DBConnector.class.getName());
@@ -56,8 +56,6 @@ public class DBConnector {
 		statement = connection.createStatement();
 
 		initDB();
-		// TODO: remove after debugging
-		printAll();
 	}
 
 	/**
@@ -66,6 +64,7 @@ public class DBConnector {
 	 * @return
 	 * @throws SQLException
 	 */
+	@Override
 	public int addProfile(final Profile profile) throws SQLException {
 		final String qry = String.format(
 				"INSERT INTO %s (%s, %s, %s) VALUES (%s, '%s', '%s')",
@@ -85,6 +84,7 @@ public class DBConnector {
 	 * @throws SQLException
 	 * @see Puzzle
 	 */
+	@Override
 	public int addPuzzle(final Puzzle puzzle) throws SQLException {
 		/* check that puzzle is unique */
 		try {
@@ -116,6 +116,7 @@ public class DBConnector {
 	 * @throws SQLException
 	 * @see Solve
 	 */
+	@Override
 	public int addSolve(final Solve solve) throws SQLException {
 		// TODO: check for uniqueness of solve???
 		// could be intensive - better handled by app?
@@ -143,6 +144,15 @@ public class DBConnector {
 	@Override
 	public void finalize() throws SQLException {
 		close();
+	}
+
+	@Override
+	public Solve getFastestSolve(final Profile p) throws SQLException {
+		final String qry = String.format(
+				"SELECT rowid, * FROM %s WHERE %s=%d ORDER BY %s LIMIT 1",
+				SOLVE_TABLE, SOLVE_PROFILE, p.getId(), SOLVE_TIME);
+
+		return getSolvesFromQry(p, qry).get(0);
 	}
 
 	/**
@@ -271,36 +281,31 @@ public class DBConnector {
 			puzzles.add(p);
 		}
 
-		// TODO: remove print
-		for (final Puzzle p : puzzles) {
-			System.out.println(p.toString());
-		}
-
 		return puzzles;
 	}
 
-	/**
-	 * Retrieves all the solves in order of their rowid.
-	 * 
-	 * @return All the solves or an empty List if none exist.
-	 * @throws SQLException
-	 * @see Solve
-	 */
-	public List<Solve> getSolves() throws SQLException {
-		LOGGER.info("Retrieving all solves");
-		final String qry = String
-				.format("SELECT rowid, * FROM %s", SOLVE_TABLE);
-		return getSolvesFromQueryWhere(qry);
+	@Override
+	public Solve getSlowestSolve(final Profile p) throws SQLException {
+		final String qry = String.format(
+				"SELECT rowid, * FROM %s WHERE %s=%d ORDER BY %s DESC LIMIT 1",
+				SOLVE_TABLE, SOLVE_PROFILE, p.getId(), SOLVE_TIME);
+
+		return getSolvesFromQry(p, qry).get(0);
 	}
 
-	public List<Solve> getSolvesForProfile(final Profile p) throws SQLException {
+	@Override
+	public List<Solve> getSolves(final Profile p) throws SQLException {
 		final String qry = String.format("SELECT rowid, * FROM %s WHERE %s=%d",
 				SOLVE_TABLE, SOLVE_PROFILE, p.getId());
 
-		final ResultSet rs = statement.executeQuery(qry);
-		final List<Solve> solves = new ArrayList<Solve>();
-		LOGGER.info("getting solves from query: " + qry);
+		return getSolvesFromQry(p, qry);
+	}
 
+	private List<Solve> getSolvesFromQry(final Profile p, final String qry)
+			throws SQLException {
+		final List<Solve> solves = new ArrayList<Solve>();
+
+		final ResultSet rs = statement.executeQuery(qry);
 		while (rs.next()) {
 			final Solve solve = new Solve(rs.getInt("rowid"));
 			solve.setScramble(rs.getString(SOLVE_SCRAMBLE));
@@ -308,44 +313,7 @@ public class DBConnector {
 			solve.setDateTime(rs.getInt(SOLVE_DATETIME));
 			solve.setProfile(p);
 			solves.add(solve);
-			LOGGER.info(solve.toString());
 		}
-
-		return solves;
-	}
-
-	/**
-	 * 
-	 * @param qry
-	 *            The WHERE clause for the final query.
-	 * @return
-	 * @throws SQLException
-	 */
-	private List<Solve> getSolvesFromQueryWhere(final String qry)
-			throws SQLException {
-
-		final ResultSet rs = statement.executeQuery(qry);
-		final List<Solve> solves = new ArrayList<Solve>();
-		LOGGER.info("getting solves from query: " + qry);
-
-		while (rs.next()) {
-			final Solve solve = new Solve(rs.getInt("id_a"));
-			solve.setScramble(rs.getString(SOLVE_SCRAMBLE));
-			solve.setSolveTime(rs.getInt(SOLVE_TIME));
-			solve.setDateTime(rs.getInt(SOLVE_DATETIME));
-			final Profile profile = new Profile(rs.getInt("id_b"));
-			profile.setName(rs.getString(PROFILE_NAME));
-			profile.setDescription(rs.getString(PROFILE_DESC));
-			final Puzzle puzzle = new Puzzle(rs.getInt("id_c"));
-			puzzle.setName(rs.getString(PUZZLE_NAME));
-			puzzle.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
-			puzzle.setImage(rs.getString(PUZZLE_IMAGE));
-			profile.setPuzzle(puzzle);
-			solve.setProfile(profile);
-			solves.add(solve);
-			LOGGER.info(solve.toString());
-		}
-
 		return solves;
 	}
 
@@ -379,31 +347,5 @@ public class DBConnector {
 				SOLVE_DATETIME, SOLVE_PROFILE, PROFILE_TABLE);
 		statement.executeUpdate(createSolve);
 
-	}
-
-	/**
-	 * prints contents of the db for debugging purposes
-	 */
-	public void printAll() {
-		try {
-			for (final Puzzle p : getPuzzles()) {
-				System.out.println(p.toString());
-			}
-			System.out
-					.println("\n---------------------------------------------\n");
-			for (final Profile p : getProfiles()) {
-				System.out.println(p.toString());
-			}
-			System.out
-					.println("\n---------------------------------------------\n");
-			for (final Solve s : getSolves()) {
-				System.out.println(s.toString());
-			}
-		} catch (final SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (final NullPointerException e1) {
-
-		}
 	}
 }

@@ -5,7 +5,6 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
@@ -20,21 +19,16 @@ import java.util.logging.Logger;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 import javax.swing.border.BevelBorder;
-
-import net.miginfocom.swing.MigLayout;
 
 import com.colin81.rubiktimer.dialogs.AboutDialog;
 import com.colin81.rubiktimer.dialogs.AboutInfo;
@@ -51,8 +45,7 @@ import com.colin81.rubiktimer.scramblers.Scrambler;
 
 public class RubikTimer extends JPanel implements ActionListener {
 
-	private static Logger LOGGER = Logger
-			.getLogger(DBConnector.class.getName());
+	private static Logger LOGGER = Logger.getLogger(RubikTimer.class.getName());
 
 	private static final String home = System.getProperty("user.home");
 	private static final String delim = System.getProperty("file.separator");
@@ -78,7 +71,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private static final String setProfileCommand = "SET_PROFILE";
 	private DBConnector db;
 	private Profile currentProfile;
-	private Scrambler currentScrambler;
+	private TimerPane timerPane;
 
 	private AboutInfo aboutInfo;
 	private JMenu mnPuzzle;
@@ -93,9 +86,8 @@ public class RubikTimer extends JPanel implements ActionListener {
 		final LoadingScreen loader = new LoadingScreen();
 
 		try {
-			buildUI();
-			dataDir = new File(home + delim + ".rubiktimer");
 
+			dataDir = new File(home + delim + ".rubiktimer");
 			dataDir.mkdir();
 
 			if (!dataDir.exists()) {
@@ -111,7 +103,8 @@ public class RubikTimer extends JPanel implements ActionListener {
 			images.mkdir();
 
 			db = new DBConnector(new File(dataDir + delim + "default.db"));
-			initPane();
+
+			buildUI();
 		} catch (final SQLException e) {
 			LOGGER.severe(e.getLocalizedMessage());
 			// TODO: prompt to create a new db?
@@ -132,9 +125,14 @@ public class RubikTimer extends JPanel implements ActionListener {
 		} else if (e.getActionCommand().equals(setProfileCommand)) {
 			currentProfile = profileMenuMap.get(e.getSource());
 			LOGGER.info("Setting profile to " + currentProfile);
-			currentScrambler = loadScrambler(currentProfile.getPuzzle()
-					.getScrambler());
-			System.out.println(currentScrambler.getNewScramble(25));
+			currentProfile.getPuzzle().setScramblerObject(
+					loadScrambler(currentProfile.getPuzzle().getScrambler()));
+
+			// TODO make this arguement dynamic!
+			currentProfile.setInspectionTime(15);
+
+			timerPane.setProfile(currentProfile);
+
 		} else if (e.getSource() == mntmAbout) {
 			final AboutDialog ad = new AboutDialog(aboutInfo);
 			ad.setVisible(true);
@@ -155,7 +153,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 			try {
 				db.addProfile(p);
 				buildPuzzleMenu();
-			} catch (final SQLException e) {
+			} catch (final Exception e) {
 				e.printStackTrace();
 				LOGGER.severe(e.getLocalizedMessage());
 				setInfo(e.getLocalizedMessage());
@@ -175,7 +173,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 			try {
 				db.addPuzzle(p);
 				buildPuzzleMenu();
-			} catch (final SQLException e) {
+			} catch (final Exception e) {
 				// TODO Auto-generated catch block
 				setInfo(e.getLocalizedMessage());
 			}
@@ -183,7 +181,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	}
 
-	private void buildPuzzleMenu() throws SQLException {
+	private void buildPuzzleMenu() throws Exception {
 		mnPuzzle.removeAll();
 		mnPuzzle.add(new JSeparator());
 		mnPuzzle.add(mntmNewPuzzle);
@@ -212,7 +210,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 			currentProfile = profiles.get(0);
 		}
 		profileMenuMap = new HashMap<JMenuItem, Profile>(profiles.size());
-		LOGGER.info(String.valueOf(mnPuzzle.getMenuComponentCount()));
 
 		for (int i = 0; i < profiles.size(); i++) {
 			final Profile p = profiles.get(i);
@@ -285,7 +282,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 		mntmNewPuzzle.setIcon(new ImageIcon(RubikTimer.class
 				.getResource("/images/new_con.gif")));
 		mntmNewPuzzle.addActionListener(this);
-		// mnPuzzle.add(mntmNewPuzzle);
 
 		final Component horizontalGlue = Box.createHorizontalGlue();
 		menuBar.add(horizontalGlue);
@@ -310,87 +306,8 @@ public class RubikTimer extends JPanel implements ActionListener {
 		final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		add(tabbedPane, BorderLayout.CENTER);
 
-		final JPanel panel_1 = new JPanel();
-		tabbedPane.addTab("Timer", null, panel_1, null);
-		panel_1.setLayout(new MigLayout("", "[grow 60][grow 40]",
-				"[][grow][grow 40][][]"));
-
-		final JLabel lblScramble = new JLabel("Scramble");
-		panel_1.add(lblScramble, "cell 0 0");
-
-		final JScrollPane scrollPane = new JScrollPane();
-		panel_1.add(scrollPane, "cell 1 0 1 3,width min(400),grow");
-
-		final JList<String> list = new JList<String>();
-		scrollPane.setViewportView(list);
-
-		final JLabel lblTimes = new JLabel("Times");
-		scrollPane.setColumnHeaderView(lblTimes);
-
-		final JLabel lblScrambleData = new JLabel("<some scramble/>");
-		panel_1.add(lblScrambleData, "cell 0 0");
-
-		final JButton btnKeep = new JButton("Keep");
-		final JButton btnDiscard = new JButton("Discard");
-		final ButtonTimer btnStart = new ButtonTimer();
-
-		btnKeep.setEnabled(false);
-		btnKeep.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(final ActionEvent e) {
-				btnKeep.setEnabled(false);
-				btnDiscard.setEnabled(false);
-				saveSolve(btnStart.getTime(), btnStart.getDate(),
-						lblScramble.getText());
-			}
-
-		});
-		panel_1.add(btnKeep,
-				"flowx,cell 0 2,width max(200),alignx center,aligny center");
-
-		btnDiscard.setEnabled(false);
-		btnDiscard.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(final ActionEvent arg0) {
-				btnDiscard.setEnabled(false);
-				btnKeep.setEnabled(false);
-			}
-
-		});
-		panel_1.add(btnDiscard,
-				"cell 0 2,width max(200),alignx center,aligny center");
-
-		btnStart.addKeyListener(new KeyAdapter() {
-
-			@Override
-			public void keyPressed(final KeyEvent e) {
-				btnStart.startStop(e);
-				if (btnStart.isFinished()) {
-					btnKeep.setEnabled(true);
-					btnDiscard.setEnabled(true);
-				} else {
-					btnKeep.setEnabled(false);
-					btnDiscard.setEnabled(false);
-				}
-			}
-
-		});
-		panel_1.add(btnStart,
-				"cell 0 1,width max(400, 80%),alignx center,height max(300, 40%),aligny center");
-
-		final JLabel lblStatistics = new JLabel("Statistics");
-		panel_1.add(lblStatistics, "flowx,cell 0 3");
-
-		final JSeparator separator_4 = new JSeparator();
-		panel_1.add(separator_4, "cell 0 3,growx");
-
-		final JSeparator separator_5 = new JSeparator();
-		panel_1.add(separator_5, "cell 1 3,growx");
-
-		final JPanel metronomePane = new MetronomePane();
-		tabbedPane.addTab("Metronome", null, metronomePane, null);
+		timerPane = new TimerPane(db, currentProfile);
+		tabbedPane.addTab("Timer", null, timerPane, null);
 
 		final JPanel panel = new JPanel();
 		add(panel, BorderLayout.SOUTH);
@@ -410,22 +327,11 @@ public class RubikTimer extends JPanel implements ActionListener {
 		aboutInfo.setDescription(DESCRIPTION);
 		aboutInfo.setVersion(VERSION);
 
-	}
-
-	/**
-	 * Populates the GUI with data collected from the database.
-	 * 
-	 * @throws SQLException
-	 */
-	private void initPane() throws SQLException {
-		buildPuzzleMenu();
-		LOGGER.info("");
-
-		if (currentProfile != null) {
-			solves = db.getSolvesForProfile(currentProfile);
-			for (final Solve s : solves) {
-				System.out.println(s);
-			}
+		try {
+			buildPuzzleMenu();
+		} catch (final Exception e) {
+			LOGGER.severe(e.getLocalizedMessage());
+			e.printStackTrace();
 		}
 
 	}
@@ -475,22 +381,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 		return null;
 
-	}
-
-	private void saveSolve(final long time, final long date,
-			final String scramble) {
-		final Solve solve = new Solve();
-		solve.setProfile(currentProfile);
-		solve.setSolveTime(time);
-		solve.setDateTime(date);
-		solve.setScramble(scramble);
-		LOGGER.info("Saving " + solve);
-		try {
-			LOGGER.info("Solve added with id: " + db.addSolve(solve));
-		} catch (final SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	private void setInfo(final String msg) {
