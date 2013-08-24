@@ -1,5 +1,6 @@
 package com.colin81.rubiktimer;
 
+import java.awt.Component;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
@@ -8,13 +9,15 @@ import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.ListCellRenderer;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -43,6 +46,18 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	 * specified. It lacks generating scrambles and saving times.
 	 */
 	private boolean sandbox = false;
+	private JPanel panel;
+	private JLabel lblBest;
+	private JLabel lblBesttime;
+	private JLabel lblWorst;
+	private JLabel lblWorsttime;
+	private Component horizontalGlue;
+	private Component horizontalGlue_1;
+	private Component horizontalGlue_2;
+	private JLabel lblAverage;
+	private JLabel lblAverageOf5;
+	private JLabel lblAveragetime;
+	private JLabel lblAverageof5Time;
 
 	public TimerPane(final StorageInterface db, final Profile profile) {
 		this.db = db;
@@ -54,14 +69,14 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	}
 
 	private void buildPane() {
-		setLayout(new MigLayout("", "[grow 60][grow 40]",
-				"[][grow][grow 40][][]"));
+		setLayout(new MigLayout("", "[grow][grow 40]",
+				"[][grow][grow 40][grow]"));
 
 		final JLabel lblScramble = new JLabel("Scramble");
 		add(lblScramble, "cell 0 0");
 
 		scrollPane = new JScrollPane();
-		add(scrollPane, "cell 1 0 1 3,width min(400),grow");
+		add(scrollPane, "cell 1 0 1 4,width min(400),grow");
 
 		updateSolves();
 
@@ -88,8 +103,10 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 			}
 
 		});
-		add(btnKeep,
-				"flowx,cell 0 2,width max(200),alignx center,aligny center");
+
+		horizontalGlue_1 = Box.createHorizontalGlue();
+		add(horizontalGlue_1, "flowx,cell 0 2,growx");
+		add(btnKeep, "cell 0 2,width max(200),alignx center,growy");
 
 		btnDiscard.setEnabled(false);
 		btnDiscard.addActionListener(new ActionListener() {
@@ -102,19 +119,47 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 			}
 
 		});
-		add(btnDiscard, "cell 0 2,width max(200),alignx center,aligny center");
+
+		horizontalGlue = Box.createHorizontalGlue();
+		add(horizontalGlue, "cell 0 2,growx");
+		add(btnDiscard, "cell 0 2,width max(200),alignx center,growy");
 
 		add(btnTimer,
 				"cell 0 1,width max(400, 80%),alignx center,height max(300, 40%),aligny center");
 
-		final JLabel lblStatistics = new JLabel("Statistics");
-		add(lblStatistics, "flowx,cell 0 3");
+		panel = new JPanel();
+		panel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED,
+				null, null), "Statistics", TitledBorder.LEADING,
+				TitledBorder.TOP, null, null));
+		add(panel, "cell 0 3,growx,aligny bottom");
+		panel.setLayout(new MigLayout("", "[][][][][]", "[][][]"));
 
-		final JSeparator separator_4 = new JSeparator();
-		add(separator_4, "cell 0 3,growx");
+		lblBest = new JLabel("Best:");
+		panel.add(lblBest, "cell 0 0,alignx right");
 
-		final JSeparator separator_5 = new JSeparator();
-		add(separator_5, "cell 1 3,growx");
+		lblBesttime = new JLabel();
+		panel.add(lblBesttime, "cell 1 0");
+
+		lblAverage = new JLabel("Average:");
+		panel.add(lblAverage, "cell 3 0,alignx right");
+
+		lblAveragetime = new JLabel();
+		panel.add(lblAveragetime, "cell 4 0");
+
+		lblWorst = new JLabel("Worst:");
+		panel.add(lblWorst, "cell 0 1,alignx right");
+
+		lblWorsttime = new JLabel();
+		panel.add(lblWorsttime, "cell 1 1");
+
+		lblAverageOf5 = new JLabel("Average of 5:");
+		panel.add(lblAverageOf5, "cell 3 1");
+
+		lblAverageof5Time = new JLabel();
+		panel.add(lblAverageof5Time, "cell 4 1");
+
+		horizontalGlue_2 = Box.createHorizontalGlue();
+		add(horizontalGlue_2, "cell 0 2,growx");
 	}
 
 	/**
