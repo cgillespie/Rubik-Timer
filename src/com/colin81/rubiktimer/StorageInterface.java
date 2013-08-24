@@ -10,6 +10,10 @@ public interface StorageInterface {
 
 	int addSolve(Solve solve) throws Exception;
 
+	Solve getFastestSolve(Profile profile) throws Exception;
+
+	Solve getSlowestSolve(Profile profile) throws Exception;
+
 	List<Solve> getSolves(Profile profile) throws Exception;
 
 }

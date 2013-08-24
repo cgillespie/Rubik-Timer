@@ -146,6 +146,15 @@ public class DBConnector implements StorageInterface {
 		close();
 	}
 
+	@Override
+	public Solve getFastestSolve(final Profile p) throws SQLException {
+		final String qry = String.format(
+				"SELECT rowid, * FROM %s WHERE %s=%d ORDER BY %s LIMIT 1",
+				SOLVE_TABLE, SOLVE_PROFILE, p.getId(), SOLVE_TIME);
+
+		return getSolvesFromQry(p, qry).get(0);
+	}
+
 	/**
 	 * Returns the rowid for the newest row in a table.
 	 * 
@@ -272,27 +281,16 @@ public class DBConnector implements StorageInterface {
 			puzzles.add(p);
 		}
 
-		// TODO: remove print
-		for (final Puzzle p : puzzles) {
-			System.out.println(p.toString());
-		}
-
 		return puzzles;
 	}
 
-	/**
-	 * Retrieves all the solves in order of their rowid.
-	 * 
-	 * @return All the solves or an empty List if none exist.
-	 * @throws SQLException
-	 * @see Solve
-	 */
-	public List<Solve> getSolves() throws SQLException {
-		// TODO this method doesn't work.
-		LOGGER.info("Retrieving all solves");
-		final String qry = String
-				.format("SELECT rowid, * FROM %s", SOLVE_TABLE);
-		return getSolvesFromQueryWhere(qry);
+	@Override
+	public Solve getSlowestSolve(final Profile p) throws SQLException {
+		final String qry = String.format(
+				"SELECT rowid, * FROM %s WHERE %s=%d ORDER BY %s DESC LIMIT 1",
+				SOLVE_TABLE, SOLVE_PROFILE, p.getId(), SOLVE_TIME);
+
+		return getSolvesFromQry(p, qry).get(0);
 	}
 
 	@Override
@@ -300,10 +298,14 @@ public class DBConnector implements StorageInterface {
 		final String qry = String.format("SELECT rowid, * FROM %s WHERE %s=%d",
 				SOLVE_TABLE, SOLVE_PROFILE, p.getId());
 
-		final ResultSet rs = statement.executeQuery(qry);
-		final List<Solve> solves = new ArrayList<Solve>();
-		LOGGER.info("getting solves from query: " + qry);
+		return getSolvesFromQry(p, qry);
+	}
 
+	private List<Solve> getSolvesFromQry(final Profile p, final String qry)
+			throws SQLException {
+		final List<Solve> solves = new ArrayList<Solve>();
+
+		final ResultSet rs = statement.executeQuery(qry);
 		while (rs.next()) {
 			final Solve solve = new Solve(rs.getInt("rowid"));
 			solve.setScramble(rs.getString(SOLVE_SCRAMBLE));
@@ -311,44 +313,7 @@ public class DBConnector implements StorageInterface {
 			solve.setDateTime(rs.getInt(SOLVE_DATETIME));
 			solve.setProfile(p);
 			solves.add(solve);
-			LOGGER.info(solve.toString());
 		}
-
-		return solves;
-	}
-
-	/**
-	 * 
-	 * @param qry
-	 *            The WHERE clause for the final query.
-	 * @return
-	 * @throws SQLException
-	 */
-	private List<Solve> getSolvesFromQueryWhere(final String qry)
-			throws SQLException {
-
-		final ResultSet rs = statement.executeQuery(qry);
-		final List<Solve> solves = new ArrayList<Solve>();
-		LOGGER.info("getting solves from query: " + qry);
-
-		while (rs.next()) {
-			final Solve solve = new Solve(rs.getInt("id_a"));
-			solve.setScramble(rs.getString(SOLVE_SCRAMBLE));
-			solve.setSolveTime(rs.getInt(SOLVE_TIME));
-			solve.setDateTime(rs.getInt(SOLVE_DATETIME));
-			final Profile profile = new Profile(rs.getInt("id_b"));
-			profile.setName(rs.getString(PROFILE_NAME));
-			profile.setDescription(rs.getString(PROFILE_DESC));
-			final Puzzle puzzle = new Puzzle(rs.getInt("id_c"));
-			puzzle.setName(rs.getString(PUZZLE_NAME));
-			puzzle.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
-			puzzle.setImage(rs.getString(PUZZLE_IMAGE));
-			profile.setPuzzle(puzzle);
-			solve.setProfile(profile);
-			solves.add(solve);
-			LOGGER.info(solve.toString());
-		}
-
 		return solves;
 	}
 
