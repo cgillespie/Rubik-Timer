@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.Box;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -41,7 +40,6 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private final StorageInterface db;
 	private Scrambler scrambler;
 	private Profile profile;
-	private DefaultListModel<Solve> listModel;
 
 	/**
 	 * Sandbox mode is a free form timing mode for when no solving profile is
@@ -155,6 +153,8 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 		final Component horizontalGlue_2 = Box.createHorizontalGlue();
 		add(horizontalGlue_2, "cell 0 2,growx");
+
+		updateSolves();
 	}
 
 	/**
@@ -220,8 +220,6 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 		try {
 			db.addSolve(s);
-			listModel.addElement(s);
-
 		} catch (final Exception e) {
 			e.printStackTrace();
 			LOGGER.severe(e.getLocalizedMessage());
@@ -242,7 +240,6 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 			this.profile = profile;
 			this.scrambler = profile.getPuzzle().getScramblerObject();
 			buildPane();
-			updateSolves();
 			requestNewScramble();
 		}
 
@@ -251,18 +248,15 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private void updateSolves() {
 		try {
 			final List<Solve> solves = db.getSolves(profile);
-			listModel = new DefaultListModel<Solve>();
-			for (final Solve s : solves) {
-				listModel.addElement(s);
-			}
 			/* Update List */
-			jlistSolves = new JList<Solve>(listModel);
+			jlistSolves = new JList<Solve>(solves.toArray(new Solve[solves
+					.size()]));
+			jlistSolves.ensureIndexIsVisible(0);
 
 			final ListCellRenderer<Solve> solveRender = new SolveRenderer();
 			jlistSolves.setCellRenderer(solveRender);
-			jlistSolves.scrollRectToVisible(jlistSolves.getBounds());
 			scrollPane.setViewportView(jlistSolves);
-			// scrollPane.scrollRectToVisible(getBounds());
+			scrollPane.scrollRectToVisible(getBounds());
 
 			/* Update statistics */
 			final Solve fastest = db.getFastestSolve(profile);
