@@ -348,4 +348,12 @@ public class DBConnector implements StorageInterface {
 		statement.executeUpdate(createSolve);
 
 	}
+
+	@Override
+	public int removeSolve(final Solve solve) throws SQLException {
+		final String qry = String.format("DELETE FROM %s WHERE rowid=%d",
+				SOLVE_TABLE, solve.getId());
+
+		return statement.executeUpdate(qry);
+	}
 }

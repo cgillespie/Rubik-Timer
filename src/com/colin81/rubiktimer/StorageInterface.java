@@ -16,4 +16,6 @@ public interface StorageInterface {
 
 	List<Solve> getSolves(Profile profile) throws Exception;
 
+	int removeSolve(Solve solve) throws Exception;
+
 }
