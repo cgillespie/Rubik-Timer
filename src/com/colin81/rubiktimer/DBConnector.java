@@ -205,8 +205,8 @@ public class DBConnector implements StorageInterface {
 	 */
 	public List<Profile> getProfiles() throws SQLException {
 		final String qry = String
-				.format("SELECT %1$s.rowid AS id_a, %2$s.rowid AS id_b, * FROM %1$s INNER JOIN %2$s ON id_a=id_b",
-						PROFILE_TABLE, PUZZLE_TABLE);
+				.format("SELECT %1$s.rowid AS id_a, %2$s.rowid AS id_b, * FROM %1$s INNER JOIN %2$s ON %3$s=id_b",
+						PROFILE_TABLE, PUZZLE_TABLE, PROFILE_PUZZLE);
 		final ResultSet rs = statement.executeQuery(qry);
 		final List<Profile> profiles = new ArrayList<Profile>();
 
