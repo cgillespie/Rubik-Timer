@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -28,11 +29,13 @@ import javax.swing.JProgressBar;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.BevelBorder;
 
 import com.colin81.rubiktimer.dialogs.AboutDialog;
 import com.colin81.rubiktimer.dialogs.AboutInfo;
-import com.colin81.rubiktimer.dialogs.LoadingScreen;
 import com.colin81.rubiktimer.dialogs.NewProfileDialog;
 import com.colin81.rubiktimer.dialogs.NewPuzzleDialog;
 import com.colin81.rubiktimer.scramblers.Scrambler;
@@ -43,7 +46,7 @@ import com.colin81.rubiktimer.scramblers.Scrambler;
  * 
  */
 
-public class RubikTimer extends JPanel implements ActionListener {
+public class RubikTimer extends JFrame implements ActionListener {
 
 	private static Logger LOGGER = Logger.getLogger(RubikTimer.class.getName());
 
@@ -58,10 +61,11 @@ public class RubikTimer extends JPanel implements ActionListener {
 	public static final String DESCRIPTION = "Basic competition style puzzle timer.";
 	public static final boolean STABLE = false;
 
+	private final String titleString = RubikTimer.TITLE
+			+ (RubikTimer.STABLE ? "" : " - " + RubikTimer.VERSION);
+
 	private List<Puzzle> puzzles;
 	private List<Profile> profiles;
-	private List<Solve> solves;
-
 	/** Maps menu items for creating a new Profile to its associated Puzzle */
 	private Map<JMenuItem, Puzzle> newProfileMenuMap;
 	private Map<JMenuItem, Profile> profileMenuMap;
@@ -69,22 +73,37 @@ public class RubikTimer extends JPanel implements ActionListener {
 	private File dataDir;
 	private static final String newProfileCommand = "NEW_PROFILE";
 	private static final String setProfileCommand = "SET_PROFILE";
+
+	public static void main(final String[] args) {
+		final RubikTimer app = new RubikTimer();
+		app.setVisible(true);
+	}
+
+	static void setProgress(final int percent) {
+		progressBar.setValue(percent);
+	}
+
 	private DBConnector db;
+
 	private Profile currentProfile;
 	private TimerPane timerPane;
-
 	private AboutInfo aboutInfo;
 	private JMenu mnPuzzle;
+
 	private JMenuItem mntmNewPuzzle;
 	private JMenuItem mntmAbout;
 
 	private JLabel lblGeneralInfo;
-	private JProgressBar progressBar;
+
+	private static JProgressBar progressBar;
 
 	public RubikTimer() {
 		// TODO: show a loading screen here
-		final LoadingScreen loader = new LoadingScreen();
+		// Is a loading screen neccessary?
+		// final LoadingScreen loader = new LoadingScreen();
+		// loader.setVisible(true);
 
+		initWindow();
 		try {
 
 			dataDir = new File(home + delim + ".rubiktimer");
@@ -115,6 +134,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 			e.printStackTrace();
 		}
 
+		// loader.setVisible(false);
 	}
 
 	@Override
@@ -335,6 +355,37 @@ public class RubikTimer extends JPanel implements ActionListener {
 		}
 	}
 
+	private void initWindow() {
+		try {
+			for (final LookAndFeelInfo info : UIManager
+					.getInstalledLookAndFeels()) {
+				if ("Nimbus".equals(info.getName())) {
+					UIManager.setLookAndFeel(info.getClassName());
+					break;
+				}
+			}
+		} catch (final Exception e) {
+			try {
+				UIManager.setLookAndFeel(UIManager
+						.getCrossPlatformLookAndFeelClassName());
+			} catch (final ClassNotFoundException e1) {
+				e1.printStackTrace();
+			} catch (final InstantiationException e1) {
+				e1.printStackTrace();
+			} catch (final IllegalAccessException e1) {
+				e1.printStackTrace();
+			} catch (final UnsupportedLookAndFeelException e1) {
+				e1.printStackTrace();
+			}
+		}
+
+		setSize(800, 600);
+		setLocationRelativeTo(null);
+		// only append version if it is an unstable release
+		setTitle(titleString);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+	}
+
 	/**
 	 * Loads a class file from the scrambler directory. The folder structure
 	 * must match the package structure of the class file.
@@ -390,17 +441,12 @@ public class RubikTimer extends JPanel implements ActionListener {
 		currentProfile.getPuzzle().setScramblerObject(
 				loadScrambler(currentProfile.getPuzzle().getScrambler()));
 
-		// TODO make this arguement dynamic!
+		// TODO make this argument dynamic!
 		currentProfile.setInspectionTime(15);
 
 		timerPane.setProfile(currentProfile);
-	}
 
-	private void setProgress(final int percent) {
-		progressBar.setValue(percent);
-	}
-
-	private void showLoadingScreen() {
-
+		setTitle(currentProfile.getName() + " - "
+				+ currentProfile.getPuzzle().getName() + "\t\t" + titleString);
 	}
 }
