@@ -265,6 +265,12 @@ public class RubikTimer extends JPanel implements ActionListener {
 		mnFile.add(separator);
 
 		final JMenuItem mntmExit = new JMenuItem("Exit");
+		mntmExit.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(final ActionEvent e) {
+				System.exit(0);
+			}
+		});
 		mntmExit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q,
 				InputEvent.CTRL_MASK));
 		mnFile.add(mntmExit);
