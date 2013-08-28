@@ -125,7 +125,9 @@ public class DBConnector implements StorageInterface {
 				"INSERT INTO %s (%s, %s, %s, %s) VALUES (%d, '%s', %d, %d)",
 				SOLVE_TABLE, SOLVE_PROFILE, SOLVE_SCRAMBLE, SOLVE_TIME,
 				SOLVE_DATETIME, solve.getProfile().getId(),
-				solve.getScramble(), solve.getSolveTime(), solve.getDateTime());
+				solve.getScramble(), solve.getSolveTime(),
+				(solve.getDateTime() / 1000l));
+		// Divide date by 1000 to convert to seconds
 
 		statement.executeUpdate(qry);
 		return getLastInsertId(PUZZLE_TABLE);
@@ -310,7 +312,8 @@ public class DBConnector implements StorageInterface {
 			final Solve solve = new Solve(rs.getInt("rowid"));
 			solve.setScramble(rs.getString(SOLVE_SCRAMBLE));
 			solve.setSolveTime(rs.getInt(SOLVE_TIME));
-			solve.setDateTime(rs.getInt(SOLVE_DATETIME));
+			// Convert the stored seconds to milliseconds
+			solve.setDateTime((long) rs.getInt(SOLVE_DATETIME) * 1000);
 			solve.setProfile(p);
 			solves.add(solve);
 		}
@@ -347,5 +350,13 @@ public class DBConnector implements StorageInterface {
 				SOLVE_DATETIME, SOLVE_PROFILE, PROFILE_TABLE);
 		statement.executeUpdate(createSolve);
 
+	}
+
+	@Override
+	public int removeSolve(final Solve solve) throws SQLException {
+		final String qry = String.format("DELETE FROM %s WHERE rowid=%d",
+				SOLVE_TABLE, solve.getId());
+
+		return statement.executeUpdate(qry);
 	}
 }

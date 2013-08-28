@@ -8,13 +8,15 @@ public class Utils {
 	 * Averages the solve times from a list of Solve objects.
 	 * 
 	 * @param solves
-	 *            The list of solves to be averaged.
+	 *            The list of solves to be averaged. The passed list needs to be
+	 *            of type <code>List&ltSolve&gt</code>. Passing null will raise
+	 *            a <code>NullPointerException</code>.
 	 * @param number
 	 *            How many of the solves in the list should be averaged.
 	 * @return The average solve time for the number of solves specified from
 	 *         the list. Passing a value of 0 will average the entire list.<br>
-	 *         <b>Example:</b> averageSolveTime(solves, 5); will average the 5
-	 *         last solves.
+	 *         <b>Example:</b> <code>averageSolveTime(solves, 5);</code> will
+	 *         average the 5 first solves.
 	 * @see Solve
 	 */
 	public static long averageSolveTime(final List<Solve> solves, int number) {
@@ -23,7 +25,7 @@ public class Utils {
 		}
 
 		long total = 0;
-		for (int i = solves.size() - 1; i >= solves.size() - number; i--) {
+		for (int i = 0; i < number; i++) {
 			total += solves.get(i).getSolveTime();
 		}
 
