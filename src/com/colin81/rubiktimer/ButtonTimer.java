@@ -15,7 +15,7 @@ public class ButtonTimer extends JButton implements ActionListener {
 	private long inspectionRemaining;
 	private boolean running, inspecting;
 	private long startTime;
-	private long finishTime;
+	private long finishDate;
 	private long totalTime;
 
 	public ButtonTimer(final int inspectionTime) {
@@ -43,7 +43,7 @@ public class ButtonTimer extends JButton implements ActionListener {
 	}
 
 	public long getDate() {
-		return finishTime;
+		return finishDate;
 	}
 
 	public long getTime() {
@@ -79,7 +79,7 @@ public class ButtonTimer extends JButton implements ActionListener {
 	public void reset() {
 		setText(Utils.milliFormat(0));
 		running = false;
-		startTime = finishTime = totalTime = 0;
+		startTime = totalTime = 0;
 	}
 
 	public void setInspectionTime(final int inspectionTime) {
@@ -90,8 +90,8 @@ public class ButtonTimer extends JButton implements ActionListener {
 		if (running) {
 			timer.stop();
 			running = false;
-			finishTime = System.currentTimeMillis();
-			totalTime = finishTime - startTime;
+			finishDate = System.currentTimeMillis();
+			totalTime = finishDate - startTime;
 			setText(Utils.milliFormat(totalTime));
 		} else if (inspecting) {
 			inspecting = false;

@@ -54,6 +54,11 @@ public class Solve {
 		return true;
 	}
 
+	/**
+	 * 
+	 * @return Returns the date that the solve was completed in the format of
+	 *         milliseconds since epoch.
+	 */
 	public long getDateTime() {
 		return dateTime;
 	}
@@ -62,6 +67,11 @@ public class Solve {
 		return id;
 	}
 
+	/**
+	 * 
+	 * @return
+	 * @see Profile
+	 */
 	public Profile getProfile() {
 		return profile;
 	}
@@ -89,6 +99,10 @@ public class Solve {
 
 	public void setDateTime(final long dateTime) {
 		this.dateTime = dateTime;
+	}
+
+	public void setId(final int id) {
+		this.id = id;
 	}
 
 	public void setProfile(final Profile profile) {
