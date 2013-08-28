@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -45,10 +44,7 @@ public class DBConnector implements StorageInterface {
 
 	public DBConnector(final File database) throws SQLException,
 			ClassNotFoundException {
-		LOGGER.setLevel(Level.ALL);
-		LOGGER.info("constructing: " + database.getAbsolutePath());
 
-		LOGGER.info("Loading sqlite connector");
 		Class.forName("org.sqlite.JDBC");
 
 		connection = DriverManager.getConnection("jdbc:sqlite:"
@@ -153,8 +149,8 @@ public class DBConnector implements StorageInterface {
 		final String qry = String.format(
 				"SELECT rowid, * FROM %s WHERE %s=%d ORDER BY %s LIMIT 1",
 				SOLVE_TABLE, SOLVE_PROFILE, p.getId(), SOLVE_TIME);
-
-		return getSolvesFromQry(p, qry).get(0);
+		final List<Solve> solves = getSolvesFromQry(p, qry);
+		return solves.size() > 0 ? solves.get(0) : null;
 	}
 
 	/**
@@ -178,21 +174,23 @@ public class DBConnector implements StorageInterface {
 	 * @throws SQLException
 	 */
 	public Profile getProfile(final int id) throws SQLException {
-		final String qry = String.format(
-				"SELECT rowid, * FROM %s WHERE rowid=%d", PROFILE_TABLE, id);
-
+		final String qry = String
+				.format("SELECT %1$s.rowid AS id_a, %2$s.rowid AS id_b, * FROM %1$s INNER JOIN %2$s ON id_a=id_b WHERE %1$s.rowid=%d",
+						PROFILE_TABLE, PUZZLE_TABLE, id);
 		final ResultSet rs = statement.executeQuery(qry);
-		final int rowid = rs.getInt("rowid");
-		if (rowid > 0) {
-			final Profile p = new Profile(rowid);
-			p.setName(rs.getString(PROFILE_NAME));
-			p.setPuzzle(getPuzzle(rs.getInt(PROFILE_PUZZLE)));
-			p.setDescription(rs.getString(PROFILE_DESC));
+		Profile profile;
 
-			// TODO remove
-			System.out.println(p);
+		while (rs.next()) {
+			profile = new Profile(rs.getInt("id_a"));
+			profile.setName(rs.getString(PROFILE_NAME));
+			profile.setDescription(rs.getString(PROFILE_DESC));
+			final Puzzle puzzle = new Puzzle(rs.getInt("id_b"));
+			puzzle.setName(rs.getString(PUZZLE_NAME));
+			puzzle.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
+			puzzle.setImage(rs.getString(PUZZLE_IMAGE));
+			profile.setPuzzle(puzzle);
 
-			return p;
+			return profile;
 		}
 
 		LOGGER.severe("Profile [" + id + "] doesn't exist!");
@@ -209,7 +207,6 @@ public class DBConnector implements StorageInterface {
 		final String qry = String
 				.format("SELECT %1$s.rowid AS id_a, %2$s.rowid AS id_b, * FROM %1$s INNER JOIN %2$s ON id_a=id_b",
 						PROFILE_TABLE, PUZZLE_TABLE);
-		LOGGER.info(qry);
 		final ResultSet rs = statement.executeQuery(qry);
 		final List<Profile> profiles = new ArrayList<Profile>();
 
@@ -223,9 +220,6 @@ public class DBConnector implements StorageInterface {
 			puzzle.setImage(rs.getString(PUZZLE_IMAGE));
 			p.setPuzzle(puzzle);
 			profiles.add(p);
-
-			// TODO remove
-			System.out.println(p);
 		}
 
 		return profiles;
@@ -251,9 +245,6 @@ public class DBConnector implements StorageInterface {
 			p.setName(rs.getString(PUZZLE_NAME));
 			p.setScrambler(rs.getString(PUZZLE_SCRAMBLE));
 			p.setImage(rs.getString(PUZZLE_IMAGE));
-
-			// TODO remove
-			System.out.println(p);
 
 			return p;
 		}
@@ -292,7 +283,8 @@ public class DBConnector implements StorageInterface {
 				"SELECT rowid, * FROM %s WHERE %s=%d ORDER BY %s DESC LIMIT 1",
 				SOLVE_TABLE, SOLVE_PROFILE, p.getId(), SOLVE_TIME);
 
-		return getSolvesFromQry(p, qry).get(0);
+		final List<Solve> solves = getSolvesFromQry(p, qry);
+		return solves.size() > 0 ? solves.get(0) : null;
 	}
 
 	@Override
@@ -326,7 +318,7 @@ public class DBConnector implements StorageInterface {
 	 * @throws SQLException
 	 */
 	private void initDB() throws SQLException {
-		LOGGER.info("init database");
+
 		final String createPuzzle = String.format(
 				"CREATE TABLE IF NOT EXISTS %s (%s TEXT NOT NULL,"
 						+ " %s TEXT, %s TEXT);", PUZZLE_TABLE, PUZZLE_NAME,

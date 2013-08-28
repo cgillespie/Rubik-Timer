@@ -308,6 +308,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 			sandbox = false;
 			this.profile = profile;
 			this.scrambler = profile.getPuzzle().getScramblerObject();
+
 			buildPane();
 			updateSolves();
 			requestNewScramble();
@@ -341,10 +342,12 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private void updateStatistics() {
 		try {
 			final Solve fastest = db.getFastestSolve(profile);
-			lblBesttime.setText(Utils.milliFormat(fastest.getSolveTime()));
+			long time = fastest == null ? 0 : fastest.getSolveTime();
+			lblBesttime.setText(Utils.milliFormat(time));
 
 			final Solve slowest = db.getSlowestSolve(profile);
-			lblWorstTime.setText(Utils.milliFormat(slowest.getSolveTime()));
+			time = slowest == null ? 0 : slowest.getSolveTime();
+			lblWorstTime.setText(Utils.milliFormat(time));
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}

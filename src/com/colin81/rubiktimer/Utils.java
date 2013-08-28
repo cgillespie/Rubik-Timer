@@ -20,6 +20,9 @@ public class Utils {
 	 * @see Solve
 	 */
 	public static long averageSolveTime(final List<Solve> solves, int number) {
+		if (solves.size() == 0) {
+			return 0;
+		}
 		if (number == 0 || number > solves.size()) {
 			number = solves.size();
 		}
@@ -56,16 +59,14 @@ public class Utils {
 	 * @return The qualified class name.
 	 */
 	public static String pathToQualifiedName(final String path) {
-		System.out.println("Qualifying path: " + path);
 		String delim = System.getProperty("file.separator");
 		// if using a windows style separator add the escape character
 		if (delim.equals("\\")) {
 			delim += "\\";
 		}
-		System.out.println("Detected path delimeter: " + delim);
 		String name = path.substring(0, path.lastIndexOf('.'));
 		name = name.replaceAll(delim, ".");
-		System.out.println("Qualified path: " + name);
+
 		return name;
 	}
 }

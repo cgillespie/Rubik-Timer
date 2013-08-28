@@ -123,15 +123,7 @@ public class RubikTimer extends JPanel implements ActionListener {
 			addProfile(newProfileMenuMap.get(e.getSource()));
 
 		} else if (e.getActionCommand().equals(setProfileCommand)) {
-			currentProfile = profileMenuMap.get(e.getSource());
-			LOGGER.info("Setting profile to " + currentProfile);
-			currentProfile.getPuzzle().setScramblerObject(
-					loadScrambler(currentProfile.getPuzzle().getScrambler()));
-
-			// TODO make this arguement dynamic!
-			currentProfile.setInspectionTime(15);
-
-			timerPane.setProfile(currentProfile);
+			setProfile(profileMenuMap.get(e.getSource()));
 
 		} else if (e.getSource() == mntmAbout) {
 			final AboutDialog ad = new AboutDialog(aboutInfo);
@@ -207,8 +199,10 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 		profiles = db.getProfiles();
 		if (profiles.size() > 0) {
-			currentProfile = profiles.get(0);
+			// TODO load the profile from a preferences file?
+			setProfile(profiles.get(0));
 		}
+
 		profileMenuMap = new HashMap<JMenuItem, Profile>(profiles.size());
 
 		for (int i = 0; i < profiles.size(); i++) {
@@ -333,7 +327,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 			LOGGER.severe(e.getLocalizedMessage());
 			e.printStackTrace();
 		}
-
 	}
 
 	/**
@@ -346,7 +339,6 @@ public class RubikTimer extends JPanel implements ActionListener {
 	 * @see Scrambler
 	 */
 	private Scrambler loadScrambler(final String classFile) {
-		LOGGER.info("Loading Scrambler: " + classFile);
 		try {
 			final File classesDir = new File(dataDir + delim + "Scramblers");
 			final ClassLoader parentLoader = Scrambler.class.getClassLoader();
@@ -385,6 +377,17 @@ public class RubikTimer extends JPanel implements ActionListener {
 
 	private void setInfo(final String msg) {
 		lblGeneralInfo.setText(msg);
+	}
+
+	private void setProfile(final Profile profile) {
+		currentProfile = profile;
+		currentProfile.getPuzzle().setScramblerObject(
+				loadScrambler(currentProfile.getPuzzle().getScrambler()));
+
+		// TODO make this arguement dynamic!
+		currentProfile.setInspectionTime(15);
+
+		timerPane.setProfile(currentProfile);
 	}
 
 	private void setProgress(final int percent) {

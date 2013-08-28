@@ -48,7 +48,6 @@ public class NewProfileDialog extends JDialog implements ActionListener {
 
 		comboBox = new JComboBox<String>();
 		for (final Puzzle p : puzzles) {
-			System.out.println(p.toString());
 			comboBox.addItem(p.getName());
 			puzzleNames.put(p.getName(), p);
 		}
@@ -92,7 +91,6 @@ public class NewProfileDialog extends JDialog implements ActionListener {
 							.equals("Please enter a name")) {
 				profile = new Profile();
 				profile.setName(nameEntry.getText());
-				System.out.println(comboBox.getSelectedItem());
 				profile.setPuzzle(puzzleNames.get(comboBox.getSelectedItem()));
 				profile.setDescription(descriptionEntry.getText());
 
