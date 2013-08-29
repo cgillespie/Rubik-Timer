@@ -55,7 +55,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 		@Override
 		public void componentRemoved(final ContainerEvent e) {
-			TimerPane.this.updateSolves();
+			TimerPane.this.updateStatistics();
 			((Component) e.getSource()).repaint();
 		}
 
@@ -65,7 +65,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private Scrambler scrambler;
 	private Profile profile;
 
-	private List<Solve> solves;
+	private volatile List<Solve> solves;
 
 	/**
 	 * Sandbox mode is a free form timing mode for when no solving profile is
@@ -251,7 +251,11 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	 */
 	private void listPaneAdd(final Solve s, final int index) {
 		final SolveTimeCell stc = new SolveTimeCell(s, db);
-		listPane.add(stc, index);
+		if (index == -1) {
+			listPane.add(stc);
+		} else {
+			listPane.add(stc, index);
+		}
 	}
 
 	public void requestNewScramble() {
@@ -286,7 +290,6 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 		try {
 			s.setId(db.addSolve(s));
-			solves.add(0, s);
 			this.listPaneAdd(s, 0);
 			updateStatistics();
 		} catch (final Exception e) {
@@ -325,22 +328,37 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 		}
 		listPane.removeAll();
 		listPane.addContainerListener(listPaneListener);
-		try {
+		new Thread() {
 
-			for (final Solve s : (solves = db.getSolves(profile))) {
-				listPaneAdd(s, 0);
+			@Override
+			public void run() {
+				try {
+					updateStatistics();
+					RubikTimer.setInfo("Loading times...");
+					int done = 0;
+					final int size = solves.size();
+					for (int i = 0; i < solves.size(); i++) {
+						listPaneAdd(solves.get(i), -1);
+						done++;
+						final double percent = (((done * 1.0) / size) * 100.0);
+						RubikTimer.setProgress((int) percent);
+					}
+					RubikTimer.setProgress(0);
+					RubikTimer.setInfo("Done");
+
+				} catch (final Exception e) {
+					LOGGER.severe(e.getLocalizedMessage());
+					e.printStackTrace();
+				}
 			}
 
-			updateStatistics();
+		}.start();
 
-		} catch (final Exception e) {
-			LOGGER.severe(e.getLocalizedMessage());
-			e.printStackTrace();
-		}
 	}
 
 	private void updateStatistics() {
 		try {
+			solves = db.getSolves(profile);
 			final Solve fastest = db.getFastestSolve(profile);
 			long time = fastest == null ? 0 : fastest.getSolveTime();
 			lblBesttime.setText(Utils.milliFormat(time));

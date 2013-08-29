@@ -289,7 +289,8 @@ public class DBConnector implements StorageInterface {
 
 	@Override
 	public List<Solve> getSolves(final Profile p) throws SQLException {
-		final String qry = String.format("SELECT rowid, * FROM %s WHERE %s=%d",
+		final String qry = String.format(
+				"SELECT rowid, * FROM %s WHERE %s=%d ORDER BY rowid desc",
 				SOLVE_TABLE, SOLVE_PROFILE, p.getId());
 
 		return getSolvesFromQry(p, qry);

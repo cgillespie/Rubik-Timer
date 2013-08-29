@@ -79,21 +79,25 @@ public class RubikTimer extends JFrame implements ActionListener {
 		app.setVisible(true);
 	}
 
+	static void setInfo(final String msg) {
+		lblGeneralInfo.setText(msg);
+	}
+
 	static void setProgress(final int percent) {
 		progressBar.setValue(percent);
 	}
 
 	private DBConnector db;
-
 	private Profile currentProfile;
 	private TimerPane timerPane;
 	private AboutInfo aboutInfo;
-	private JMenu mnPuzzle;
 
+	private JMenu mnPuzzle;
 	private JMenuItem mntmNewPuzzle;
+
 	private JMenuItem mntmAbout;
 
-	private JLabel lblGeneralInfo;
+	private static JLabel lblGeneralInfo;
 
 	private static JProgressBar progressBar;
 
@@ -430,10 +434,6 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 		return null;
 
-	}
-
-	private void setInfo(final String msg) {
-		lblGeneralInfo.setText(msg);
 	}
 
 	private void setProfile(final Profile profile) {
