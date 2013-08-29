@@ -333,6 +333,9 @@ public class RubikTimer extends JFrame implements ActionListener {
 		timerPane = new TimerPane(db, currentProfile);
 		tabbedPane.addTab("Timer", null, timerPane, null);
 
+		final JPanel metronomePane = new MetronomePane();
+		tabbedPane.addTab("Metronome", null, metronomePane, null);
+
 		final JPanel panel = new JPanel();
 		add(panel, BorderLayout.SOUTH);
 		panel.setLayout(new BorderLayout(0, 0));
