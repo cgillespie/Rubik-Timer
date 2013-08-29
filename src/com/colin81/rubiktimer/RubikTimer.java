@@ -41,7 +41,7 @@ import com.colin81.rubiktimer.dialogs.NewPuzzleDialog;
 import com.colin81.rubiktimer.scramblers.Scrambler;
 
 /**
- * @version 0.0.0
+ * @version 0.1.0
  * @author Colin Gillespie
  * 
  */
@@ -56,7 +56,7 @@ public class RubikTimer extends JFrame implements ActionListener {
 	private static final long serialVersionUID = -5054718029147059487L;
 
 	public static final String TITLE = "Rubik Timer";
-	public static final String VERSION = "v0.0.1";
+	public static final String VERSION = "v0.1.0 - alpha";
 	public static final String COPYRIGHT = "(c) Copyright Colin Gillespie 2013";
 	public static final String DESCRIPTION = "Basic competition style puzzle timer.";
 	public static final boolean STABLE = false;
@@ -245,15 +245,16 @@ public class RubikTimer extends JFrame implements ActionListener {
 	}
 
 	private void buildUI() {
-		setLayout(new BorderLayout(0, 0));
+		getContentPane().setLayout(new BorderLayout(0, 0));
 
 		final JMenuBar menuBar = new JMenuBar();
-		add(menuBar, BorderLayout.NORTH);
+		getContentPane().add(menuBar, BorderLayout.NORTH);
 
 		final JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 
 		final JMenuItem mntmNew = new JMenuItem("New...");
+		mntmNew.setEnabled(false);
 		mntmNew.setIcon(new ImageIcon(RubikTimer.class
 				.getResource("/images/new_con.gif")));
 		mnFile.add(mntmNew);
@@ -262,6 +263,7 @@ public class RubikTimer extends JFrame implements ActionListener {
 		mnFile.add(separator_1);
 
 		final JMenuItem mntmDelete = new JMenuItem("Delete...");
+		mntmDelete.setEnabled(false);
 		mntmDelete.setIcon(new ImageIcon(RubikTimer.class
 				.getResource("/images/delete_obj.gif")));
 		mnFile.add(mntmDelete);
@@ -270,11 +272,13 @@ public class RubikTimer extends JFrame implements ActionListener {
 		mnFile.add(separator_6);
 
 		final JMenuItem mntmImport = new JMenuItem("Import...");
+		mntmImport.setEnabled(false);
 		mntmImport.setIcon(new ImageIcon(RubikTimer.class
 				.getResource("/images/import_wiz.gif")));
 		mnFile.add(mntmImport);
 
 		final JMenuItem mntmExport = new JMenuItem("Export...");
+		mntmExport.setEnabled(false);
 		mntmExport.setIcon(new ImageIcon(RubikTimer.class
 				.getResource("/images/export_wiz.gif")));
 		mnFile.add(mntmExport);
@@ -317,6 +321,7 @@ public class RubikTimer extends JFrame implements ActionListener {
 		mntmAbout.addActionListener(this);
 
 		final JMenuItem mntmHelp = new JMenuItem("Help");
+		mntmHelp.setEnabled(false);
 		mntmHelp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H,
 				InputEvent.CTRL_MASK));
 		mntmHelp.setIcon(new ImageIcon(RubikTimer.class
@@ -328,7 +333,7 @@ public class RubikTimer extends JFrame implements ActionListener {
 		mnHelp.add(mntmAbout);
 
 		final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		add(tabbedPane, BorderLayout.CENTER);
+		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
 		timerPane = new TimerPane(db, currentProfile);
 		tabbedPane.addTab("Timer", null, timerPane, null);
@@ -337,7 +342,7 @@ public class RubikTimer extends JFrame implements ActionListener {
 		tabbedPane.addTab("Metronome", null, metronomePane, null);
 
 		final JPanel panel = new JPanel();
-		add(panel, BorderLayout.SOUTH);
+		getContentPane().add(panel, BorderLayout.SOUTH);
 		panel.setLayout(new BorderLayout(0, 0));
 
 		lblGeneralInfo = new JLabel("Welcome");
