@@ -38,6 +38,8 @@ import com.colin81.rubiktimer.dialogs.AboutDialog;
 import com.colin81.rubiktimer.dialogs.AboutInfo;
 import com.colin81.rubiktimer.dialogs.NewProfileDialog;
 import com.colin81.rubiktimer.dialogs.NewPuzzleDialog;
+import com.colin81.rubiktimer.dialogs.Preferences;
+import com.colin81.rubiktimer.dialogs.PreferencesDialog;
 import com.colin81.rubiktimer.scramblers.Scrambler;
 
 /**
@@ -71,6 +73,8 @@ public class RubikTimer extends JFrame implements ActionListener {
 	private Map<JMenuItem, Profile> profileMenuMap;
 
 	private File dataDir;
+	private Preferences prefs;
+
 	private static final String newProfileCommand = "NEW_PROFILE";
 	private static final String setProfileCommand = "SET_PROFILE";
 
@@ -96,6 +100,7 @@ public class RubikTimer extends JFrame implements ActionListener {
 	private JMenuItem mntmNewPuzzle;
 
 	private JMenuItem mntmAbout;
+	private JMenuItem mntmPreferences;
 
 	private static JLabel lblGeneralInfo;
 
@@ -124,6 +129,8 @@ public class RubikTimer extends JFrame implements ActionListener {
 					+ "Images");
 			scramblers.mkdir();
 			images.mkdir();
+			prefs = new Preferences(dataDir.getAbsoluteFile() + delim
+					+ "rubik-timer.properties");
 
 			db = new DBConnector(new File(dataDir + delim + "default.db"));
 
@@ -155,6 +162,8 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 		} else if (e.getSource() == mntmNewPuzzle) {
 			addPuzzle();
+		} else if (e.getSource() == mntmPreferences) {
+			openPreferences();
 		}
 
 	}
@@ -286,7 +295,8 @@ public class RubikTimer extends JFrame implements ActionListener {
 		final JSeparator separator_3 = new JSeparator();
 		mnFile.add(separator_3);
 
-		final JMenuItem mntmPreferences = new JMenuItem("Preferences");
+		mntmPreferences = new JMenuItem("Preferences");
+		mntmPreferences.addActionListener(this);
 		mnFile.add(mntmPreferences);
 
 		final JSeparator separator = new JSeparator();
@@ -296,6 +306,8 @@ public class RubikTimer extends JFrame implements ActionListener {
 		mntmExit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(final ActionEvent e) {
+				// save preferences before quitting
+				prefs.saveProperties();
 				System.exit(0);
 			}
 		});
@@ -444,15 +456,19 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 	}
 
+	private void openPreferences() {
+		final PreferencesDialog pd = new PreferencesDialog(prefs);
+		pd.setVisible(true);
+		timerPane.setInspectionTime(prefs.getInspectionTime());
+	}
+
 	private void setProfile(final Profile profile) {
 		currentProfile = profile;
 		currentProfile.getPuzzle().setScramblerObject(
 				loadScrambler(currentProfile.getPuzzle().getScrambler()));
 
-		// TODO make this argument dynamic!
-		currentProfile.setInspectionTime(15);
-
 		timerPane.setProfile(currentProfile);
+		timerPane.setInspectionTime(prefs.getInspectionTime());
 
 		setTitle(currentProfile.getName() + " - "
 				+ currentProfile.getPuzzle().getName() + "\t\t" + titleString);
