@@ -107,12 +107,8 @@ public class RubikTimer extends JFrame implements ActionListener {
 	private static JProgressBar progressBar;
 
 	public RubikTimer() {
-		// TODO: show a loading screen here
-		// Is a loading screen neccessary?
-		// final LoadingScreen loader = new LoadingScreen();
-		// loader.setVisible(true);
-
 		initWindow();
+
 		try {
 
 			dataDir = new File(home + delim + ".rubiktimer");
@@ -144,8 +140,6 @@ public class RubikTimer extends JFrame implements ActionListener {
 			// TODO: show error message on the loading screen
 			e.printStackTrace();
 		}
-
-		// loader.setVisible(false);
 	}
 
 	@Override
@@ -168,16 +162,27 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 	}
 
+	/**
+	 * Spawns a dialogue for the user to enter information about the profile to
+	 * be created. If successful the new Profile object is saved and is switched
+	 * to. The puzzle menu is also rebuilt.
+	 * 
+	 * @param target
+	 *            The Puzzle type that will be selected by default by the
+	 *            dialogue.
+	 * @see Profile
+	 * @see Puzzle
+	 * @see NewProfileDialog
+	 */
 	private void addProfile(final Puzzle target) {
-		LOGGER.info("Creating new Profile for Puzzle: " + target.getName());
 		final NewProfileDialog npd = new NewProfileDialog(puzzles, target);
 
 		if (npd.isConfirmed()) {
 			final Profile p = npd.getNewProfile();
-			LOGGER.info(p.toString());
 			try {
-				db.addProfile(p);
+				final int id = db.addProfile(p);
 				buildPuzzleMenu();
+				setProfile(profiles.get(id - 1));
 			} catch (final Exception e) {
 				e.printStackTrace();
 				LOGGER.severe(e.getLocalizedMessage());
@@ -187,25 +192,33 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 	}
 
+	/**
+	 * Spawns a dialogue for the user to enter information about the new Puzzle
+	 * object. It is then saved and the puzzle menu is rebuilt to reflect
+	 * changes.
+	 */
 	private void addPuzzle() {
-		LOGGER.info("someone requested a new puzzle");
-
 		final NewPuzzleDialog npd = new NewPuzzleDialog(
 				dataDir.getAbsolutePath());
 		if (npd.isConfirmed()) {
 			final Puzzle p = npd.getNewPuzzle();
-			LOGGER.info(p.toString());
+
 			try {
 				db.addPuzzle(p);
 				buildPuzzleMenu();
 			} catch (final Exception e) {
-				// TODO Auto-generated catch block
+				e.printStackTrace();
 				setInfo(e.getLocalizedMessage());
 			}
 		}
-
 	}
 
+	/**
+	 * Creates the Puzzle menu in the main menu bar. It shows a hierarchy of
+	 * Puzzle 's and Profile 's.
+	 * 
+	 * @throws Exception
+	 */
 	private void buildPuzzleMenu() throws Exception {
 		mnPuzzle.removeAll();
 		mnPuzzle.add(new JSeparator());
@@ -213,6 +226,9 @@ public class RubikTimer extends JFrame implements ActionListener {
 		puzzles = db.getPuzzles();
 		newProfileMenuMap = new HashMap<JMenuItem, Puzzle>(puzzles.size());
 
+		/*
+		 * Add in all of the puzzle objects
+		 */
 		for (int i = 0; i < puzzles.size(); i++) {
 			final Puzzle p = puzzles.get(i);
 			final JMenu menu = new JMenu(p.getName());
@@ -231,13 +247,11 @@ public class RubikTimer extends JFrame implements ActionListener {
 		}
 
 		profiles = db.getProfiles();
-		if (profiles.size() > 0) {
-			// TODO load the profile from a preferences file?
-			setProfile(profiles.get(0));
-		}
-
 		profileMenuMap = new HashMap<JMenuItem, Profile>(profiles.size());
 
+		/*
+		 * Add in all of the profile objects
+		 */
 		for (int i = 0; i < profiles.size(); i++) {
 			final Profile p = profiles.get(i);
 			final JMenuItem item = new JMenuItem(p.getName());
@@ -253,6 +267,9 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 	}
 
+	/**
+	 * Initializes all the components for the main window.
+	 */
 	private void buildUI() {
 		getContentPane().setLayout(new BorderLayout(0, 0));
 
@@ -377,8 +394,17 @@ public class RubikTimer extends JFrame implements ActionListener {
 			LOGGER.severe(e.getLocalizedMessage());
 			e.printStackTrace();
 		}
+
+		if (profiles.size() > 0) {
+			// TODO load the profile from a preferences file?
+			setProfile(profiles.get(0));
+		}
 	}
 
+	/**
+	 * Initialiazes the window. This should be called before buildUI(). Sets the
+	 * size, location and look and feel.
+	 */
 	private void initWindow() {
 		try {
 			for (final LookAndFeelInfo info : UIManager
@@ -405,7 +431,6 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 		setSize(800, 600);
 		setLocationRelativeTo(null);
-		// only append version if it is an unstable release
 		setTitle(titleString);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 	}
@@ -456,16 +481,33 @@ public class RubikTimer extends JFrame implements ActionListener {
 
 	}
 
+	/**
+	 * Opens the preferences dialogue and updates the program to reflect any
+	 * changes.
+	 * 
+	 * @see PreferencesDialog
+	 */
 	private void openPreferences() {
 		final PreferencesDialog pd = new PreferencesDialog(prefs);
 		pd.setVisible(true);
 		timerPane.setInspectionTime(prefs.getInspectionTime());
 	}
 
+	/**
+	 * Sets the program up for using the specified Profile.
+	 * 
+	 * @param profile
+	 *            The Profile the program should be using.
+	 * @see Profile
+	 */
 	private void setProfile(final Profile profile) {
 		currentProfile = profile;
-		currentProfile.getPuzzle().setScramblerObject(
-				loadScrambler(currentProfile.getPuzzle().getScrambler()));
+		if (!currentProfile.getPuzzle().getScrambler().equals("null")) {
+			currentProfile.getPuzzle().setScramblerObject(
+					loadScrambler(currentProfile.getPuzzle().getScrambler()));
+		} else {
+			currentProfile.getPuzzle().setScramblerObject(null);
+		}
 
 		timerPane.setProfile(currentProfile);
 		timerPane.setInspectionTime(prefs.getInspectionTime());
