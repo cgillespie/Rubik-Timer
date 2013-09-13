@@ -110,7 +110,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 
 		btnKeep = new JButton("Keep");
 		btnDiscard = new JButton("Discard");
-		btnTimer = new ButtonTimer(profile.getInspectionTime());
+		btnTimer = new ButtonTimer();
 
 		btnKeep.setEnabled(false);
 		btnKeep.addActionListener(new ActionListener() {
@@ -204,7 +204,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	private void buildSandBoxPane() {
 		setLayout(new MigLayout("", "[grow]"));
 
-		btnTimer = new ButtonTimer(0);
+		btnTimer = new ButtonTimer();
 		add(btnTimer,
 				"cell 0 0,width max(400, 80%),alignx center,height max(300, 40%),aligny center");
 
@@ -299,7 +299,7 @@ public class TimerPane extends JPanel implements KeyEventDispatcher {
 	}
 
 	public void setInspectionTime(final int inspectionTime) {
-		this.profile.setInspectionTime(inspectionTime);
+		this.btnTimer.setInspectionTime(inspectionTime);
 	}
 
 	public void setProfile(final Profile profile) {

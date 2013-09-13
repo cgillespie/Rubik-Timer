@@ -18,9 +18,9 @@ public class ButtonTimer extends JButton implements ActionListener {
 	private long finishDate;
 	private long totalTime;
 
-	public ButtonTimer(final int inspectionTime) {
+	public ButtonTimer() {
 		super(Utils.milliFormat(0));
-		this.inspectionTime = inspectionTime * 1000;
+		this.inspectionTime = 0;
 		timer = new Timer(10, this);
 		running = false;
 	}

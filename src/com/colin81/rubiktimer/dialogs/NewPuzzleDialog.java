@@ -32,12 +32,10 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 5219411011556348152L;
 
 	private final JButton btnChooseScrambler;
-	private final JButton btnChooseImage;
 	private final JTextField textField;
 	private final JButton btnOk;
 	private final JButton btnCancel;
 	private final JLabel lblScramblePath;
-	private final JLabel lblImagePath;
 	private JFileChooser chooser;
 
 	private final String dir;
@@ -47,7 +45,7 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 	private boolean confirmed;
 
 	public NewPuzzleDialog(final String dataDir) {
-		setMinimumSize(new Dimension(300, 150));
+		setMinimumSize(new Dimension(300, 125));
 		this.setModal(true);
 		setLocationRelativeTo(null);
 		// setResizable(false);
@@ -59,7 +57,7 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 
 		final JPanel panel = new JPanel();
 		getContentPane().add(panel);
-		panel.setLayout(new MigLayout("", "[][grow]", "[][][][][]"));
+		panel.setLayout(new MigLayout("", "[][grow]", "[][][][]"));
 
 		final JLabel lblPuzzleName = new JLabel("Puzzle Name");
 		panel.add(lblPuzzleName, "cell 0 0,alignx trailing");
@@ -78,32 +76,19 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 				.getResource("/images/fldr_obj.gif")));
 		panel.add(btnChooseScrambler, "flowx,cell 1 1");
 
-		lblScramblePath = new JLabel("<some file>");
+		lblScramblePath = new JLabel("None");
 		panel.add(lblScramblePath, "cell 1 1");
 
-		final JLabel lblImage = new JLabel("Image");
-		panel.add(lblImage, "cell 0 2,alignx trailing");
-
-		btnChooseImage = new JButton("");
-		btnChooseImage.addActionListener(this);
-		btnChooseImage.setBorder(null);
-		btnChooseImage.setIcon(new ImageIcon(NewPuzzleDialog.class
-				.getResource("/images/image_obj.gif")));
-		panel.add(btnChooseImage, "flowx,cell 1 2");
-
 		final JSeparator separator = new JSeparator();
-		panel.add(separator, "cell 0 3 2 1,growx");
+		panel.add(separator, "cell 0 2 2 1,growx");
 
 		btnOk = new JButton("OK");
 		btnOk.addActionListener(this);
-		panel.add(btnOk, "flowx,cell 1 4,alignx right");
-
-		lblImagePath = new JLabel("<some image>");
-		panel.add(lblImagePath, "cell 1 2");
+		panel.add(btnOk, "flowx,cell 1 3,alignx right");
 
 		btnCancel = new JButton("Cancel");
 		btnCancel.addActionListener(this);
-		panel.add(btnCancel, "cell 1 4");
+		panel.add(btnCancel, "cell 1 3");
 
 		setVisible(true);
 	}
@@ -154,16 +139,6 @@ public class NewPuzzleDialog extends JDialog implements ActionListener {
 				lblScramblePath.setText(chooser.getSelectedFile().getName());
 			}
 
-		} else if (e.getSource() == btnChooseImage) {
-			chooser = new JFileChooser();
-			final FileNameExtensionFilter filter = new FileNameExtensionFilter(
-					"JPG Images", "jpg");
-			chooser.setFileFilter(filter);
-			final int returnVal = chooser.showOpenDialog(this);
-			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				imageLoc = chooser.getSelectedFile().getAbsolutePath();
-				lblImagePath.setText(chooser.getSelectedFile().getName());
-			}
 		}
 	}
 
